@@ -3,6 +3,7 @@ import EditorPane from './components/EditorPane';
 import PreviewPane from './components/PreviewPane';
 import ThemeSwitcher from './components/ThemeSwitcher';
 import DevicePreviewToggle from './components/DevicePreviewToggle';
+import FontSelector from './components/FontSelector';
 import Toolbar from './components/Toolbar';
 import { renderMarkdown } from './utils/markdownRenderer';
 import { copyHtmlToWeChat } from './utils/wechatCopy';
@@ -17,6 +18,7 @@ const App: React.FC = () => {
   const [isCopying, setIsCopying] = useState<boolean>(false);
   const [showEditor, setShowEditor] = useState<boolean>(true);
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
+  const [font, setFont] = useState<string>('default');
 
   // 实时渲染 markdown → html
   useEffect(() => {
@@ -49,7 +51,7 @@ const App: React.FC = () => {
 
     setIsCopying(true);
     try {
-      const result = await copyHtmlToWeChat(html, theme);
+      const result = await copyHtmlToWeChat(html, theme, font);
       alert(result.message);
     } catch (error) {
       console.error('复制失败:', error);
@@ -57,7 +59,7 @@ const App: React.FC = () => {
     } finally {
       setIsCopying(false);
     }
-  }, [html, theme]);
+  }, [html, theme, font]);
 
   return (
     <div className={`app theme-${theme}`}>
@@ -77,6 +79,7 @@ const App: React.FC = () => {
                 >
                   {showEditor ? '👁️ 隐藏源码' : '👁️‍🗨️ 显示源码'}
                 </button>
+                <FontSelector font={font} setFont={setFont} />
                 <ThemeSwitcher theme={theme} setTheme={setTheme} />
                 <DevicePreviewToggle device={device} setDevice={setDevice} />
               </>
@@ -94,7 +97,7 @@ const App: React.FC = () => {
 
       <main className={`main-container device-${device} ${!showEditor ? 'editor-hidden' : ''} ${isFullscreen ? 'fullscreen' : ''}`}>
         {showEditor && <EditorPane markdown={markdown} setMarkdown={setMarkdown} />}
-        <PreviewPane html={html} device={device} isFullscreen={isFullscreen} />
+        <PreviewPane html={html} device={device} isFullscreen={isFullscreen} font={font} />
       </main>
 
       {!isFullscreen && (
