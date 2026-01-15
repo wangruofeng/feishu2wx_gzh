@@ -1,6 +1,16 @@
+<div align="center">
+
 # 飞书文档 → 微信公众号排版器
 
-一个现代化的工具，帮助您快速将飞书文档转换为微信公众号文章格式。
+**一个现代化的工具，帮助您快速将飞书文档转换为微信公众号文章格式。**
+
+[![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=flat&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![React](https://img.shields.io/badge/React-20232A?style=flat&logo=react&logoColor=61DAFB)](https://reactjs.org/)
+[![Create React App](https://img.shields.io/badge/Create%20React%20App-09D3AC?style=flat&logo=react&logoColor=white)](https://create-react-app.dev/)
+[![Markdown-it](https://img.shields.io/badge/Markdown--it-000000?style=flat&logo=markdown&logoColor=white)](https://github.com/markdown-it/markdown-it)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
+</div>
 
 ## ✨ 功能特性
 
