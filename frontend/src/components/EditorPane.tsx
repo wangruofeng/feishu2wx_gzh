@@ -1,5 +1,4 @@
-import React, { useRef, useState, useCallback } from 'react';
-import axios from 'axios';
+import React, { useRef, useCallback } from 'react';
 import { convertHtmlToMarkdown } from '../utils/htmlToMarkdown';
 import './EditorPane.css';
 
@@ -10,9 +9,6 @@ interface Props {
 
 const EditorPane: React.FC<Props> = ({ markdown, setMarkdown }) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [isDragging, setIsDragging] = useState<boolean>(false);
-  const [isUploading, setIsUploading] = useState<boolean>(false);
 
   // 处理粘贴事件
   const handlePaste = useCallback(async (e: React.ClipboardEvent) => {
@@ -50,78 +46,6 @@ const EditorPane: React.FC<Props> = ({ markdown, setMarkdown }) => {
     }
   }, [markdown, setMarkdown]);
 
-  // 处理图片上传
-  const handleImageUpload = useCallback(async (file: File) => {
-    if (!file.type.startsWith('image/')) {
-      alert('请上传图片文件');
-      return;
-    }
-
-    setIsUploading(true);
-    try {
-      const formData = new FormData();
-      formData.append('image', file);
-
-      const response = await axios.post('/api/upload-image', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-
-      const imageUrl = response.data.url;
-      const textarea = textareaRef.current;
-      if (textarea) {
-        const start = textarea.selectionStart;
-        const end = textarea.selectionEnd;
-        const imageMarkdown = `![${file.name}](${imageUrl})`;
-        const newMd = markdown.slice(0, start) + imageMarkdown + markdown.slice(end);
-        setMarkdown(newMd);
-        
-        setTimeout(() => {
-          const newPos = start + imageMarkdown.length;
-          textarea.setSelectionRange(newPos, newPos);
-          textarea.focus();
-        }, 0);
-      }
-    } catch (error: any) {
-      console.error('图片上传失败:', error);
-      alert(error.response?.data?.error || '图片上传失败，请重试');
-    } finally {
-      setIsUploading(false);
-    }
-  }, [markdown, setMarkdown]);
-
-  // 处理文件选择
-  const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      handleImageUpload(e.target.files[0]);
-      e.target.value = ''; // 重置input
-    }
-  }, [handleImageUpload]);
-
-  // 处理拖放
-  const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(true);
-  }, []);
-
-  const handleDragLeave = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-  }, []);
-
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-
-    const files = e.dataTransfer.files;
-    if (files.length > 0) {
-      handleImageUpload(files[0]);
-    }
-  }, [handleImageUpload]);
 
   // 插入Markdown语法
   const insertMarkdown = useCallback((before: string, after: string = '') => {
@@ -147,45 +71,16 @@ const EditorPane: React.FC<Props> = ({ markdown, setMarkdown }) => {
     <div className="editor-pane">
       <div className="editor-header">
         <h2>Markdown 源码</h2>
-        <div className="editor-actions">
-          <button
-            className="btn-upload"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={isUploading}
-          >
-            {isUploading ? '上传中...' : '📷 上传图片'}
-          </button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            onChange={handleFileSelect}
-            style={{ display: 'none' }}
-          />
-        </div>
       </div>
 
-      <div
-        className={`editor-container ${isDragging ? 'dragging' : ''}`}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-      >
-        {isDragging && (
-          <div className="drag-overlay">
-            <div className="drag-message">
-              <div className="drag-icon">📎</div>
-              <div>松开鼠标上传图片</div>
-            </div>
-          </div>
-        )}
+      <div className="editor-container">
         <textarea
           ref={textareaRef}
           className="markdown-editor"
           value={markdown}
-          onChange={(e) => setMarkdown(e.target.value)}
+          onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setMarkdown(e.target.value)}
           onPaste={handlePaste}
-          placeholder="请粘贴飞书文档内容或直接编写 Markdown...&#10;&#10;提示：&#10;• 从飞书文档复制内容后直接粘贴即可自动转换&#10;• 支持拖拽图片上传&#10;• 支持常见 Markdown 语法"
+          placeholder="请粘贴飞书文档内容或直接编写 Markdown...&#10;&#10;提示：&#10;• 从飞书文档复制内容后直接粘贴即可自动转换&#10;• 支持常见 Markdown 语法&#10;• 图片请使用 Markdown 格式：![描述](图片URL)"
           spellCheck={false}
         />
       </div>

@@ -24,65 +24,10 @@
   margin: 0;
 }
 
-.editor-actions {
-  display: flex;
-  gap: 8px;
-}
-
-.btn-upload {
-  padding: 6px 12px;
-  background-color: #52c41a;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 12px;
-  transition: background-color 0.2s;
-}
-
-.btn-upload:hover:not(:disabled) {
-  background-color: #73d13d;
-}
-
-.btn-upload:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
 .editor-container {
   position: relative;
   flex: 1;
   overflow: hidden;
-}
-
-.editor-container.dragging {
-  background-color: #f0fdf4;
-}
-
-.drag-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(82, 196, 26, 0.1);
-  border: 2px dashed #52c41a;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 10;
-  pointer-events: none;
-}
-
-.drag-message {
-  text-align: center;
-  color: #52c41a;
-  font-weight: 600;
-}
-
-.drag-icon {
-  font-size: 48px;
-  margin-bottom: 8px;
 }
 
 .markdown-editor {

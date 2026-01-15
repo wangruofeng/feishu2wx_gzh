@@ -15,14 +15,14 @@ export function convertHtmlToMarkdown(html: string): string {
 
   // 自定义规则：处理代码块
   turndownService.addRule('codeBlock', {
-    filter: function (node) {
+    filter: function (node: any) {
       return (
         node.nodeName === 'PRE' &&
         node.firstChild &&
         node.firstChild.nodeName === 'CODE'
       );
     },
-    replacement: function (content, node) {
+    replacement: function (content: string, node: any) {
       const codeNode = node.firstChild as HTMLElement;
       const className = codeNode.getAttribute('class') || '';
       const langMatch = className.match(/language-(\w+)/);
@@ -35,7 +35,7 @@ export function convertHtmlToMarkdown(html: string): string {
   // 自定义规则：处理图片
   turndownService.addRule('image', {
     filter: 'img',
-    replacement: function (content, node) {
+    replacement: function (content: string, node: any) {
       const img = node as HTMLImageElement;
       const alt = img.getAttribute('alt') || '';
       const src = img.getAttribute('src') || '';
@@ -46,13 +46,13 @@ export function convertHtmlToMarkdown(html: string): string {
 
   // 处理飞书特有的格式
   turndownService.addRule('feishuHighlight', {
-    filter: function (node) {
+    filter: function (node: any) {
       return (
         node.nodeName === 'SPAN' &&
         (node as HTMLElement).style.backgroundColor !== ''
       );
     },
-    replacement: function (content) {
+    replacement: function (content: string) {
       return `==${content}==`;
     }
   });

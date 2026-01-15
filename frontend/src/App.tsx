@@ -31,19 +31,15 @@ const App: React.FC = () => {
 
     setIsCopying(true);
     try {
-      const success = await copyHtmlToWeChat(html);
-      if (success) {
-        alert('✅ 已复制到剪贴板！\n\n请打开微信公众号编辑器，按 Ctrl+V (Windows) 或 Cmd+V (Mac) 粘贴内容。');
-      } else {
-        alert('❌ 复制失败，请手动选择并复制右侧预览区域的内容');
-      }
+      const result = await copyHtmlToWeChat(html, theme);
+      alert(result.message);
     } catch (error) {
       console.error('复制失败:', error);
-      alert('❌ 复制失败，请手动选择并复制右侧预览区域的内容');
+      alert('❌ 复制失败。\n\n请手动选择右侧预览区域的内容，按 Ctrl+C (Windows) 或 Cmd+C (Mac) 复制，然后粘贴到微信公众号编辑器。');
     } finally {
       setIsCopying(false);
     }
-  }, [html]);
+  }, [html, theme]);
 
   return (
     <div className={`app theme-${theme}`}>

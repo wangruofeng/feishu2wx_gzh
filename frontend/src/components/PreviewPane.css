@@ -76,12 +76,11 @@
   font-size: 2em;
   border-bottom: 1px solid #e8e8e8;
   padding-bottom: 8px;
+  text-align: center;
 }
 
 .preview-content h2 {
   font-size: 1.5em;
-  border-bottom: 1px solid #e8e8e8;
-  padding-bottom: 8px;
 }
 
 .preview-content h3 {
@@ -174,6 +173,16 @@
   border: none;
   border-top: 2px solid #e8e8e8;
   margin: 24px 0;
+}
+
+.preview-content strong,
+.preview-content b {
+  font-weight: bold;
+}
+
+.preview-content em,
+.preview-content i {
+  font-style: italic;
 }
 
 @media (max-width: 768px) {

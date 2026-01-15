@@ -2,28 +2,40 @@ import MarkdownIt from 'markdown-it';
 import hljs from 'highlight.js';
 import 'highlight.js/styles/github.css';
 
-const md = new MarkdownIt({
-  html: true,
-  linkify: true,
-  typographer: true,
-  highlight: function (str, lang) {
+// 创建一个临时的 MarkdownIt 实例用于 escapeHtml
+const tempMd = new MarkdownIt();
+
+// 创建 highlight 函数（避免循环引用）
+function createHighlightFunction() {
+  return function (str: string, lang: string): string {
     if (lang && hljs.getLanguage(lang)) {
       try {
         return '<pre class="hljs"><code>' +
                hljs.highlight(str, { language: lang }).value +
                '</code></pre>';
-      } catch (__) {}
+      } catch (__) {
+        // 如果高亮失败，使用转义后的文本
+      }
     }
-    return '<pre class="hljs"><code>' + md.utils.escapeHtml(str) + '</code></pre>';
-  }
+    // 使用临时实例的 escapeHtml 方法
+    return '<pre class="hljs"><code>' + tempMd.utils.escapeHtml(str) + '</code></pre>';
+  };
+}
+
+// 创建 MarkdownIt 实例
+const md: MarkdownIt = new MarkdownIt({
+  html: true,
+  linkify: true,
+  typographer: true,
+  highlight: createHighlightFunction(),
 });
 
 // 配置链接在新窗口打开
-const defaultRender = md.renderer.rules.link_open || function(tokens, idx, options, env, self) {
+const defaultRender = md.renderer.rules.link_open || function(tokens: any, idx: number, options: any, env: any, self: any) {
   return self.renderToken(tokens, idx, options);
 };
 
-md.renderer.rules.link_open = function (tokens, idx, options, env, self) {
+md.renderer.rules.link_open = function (tokens: any, idx: number, options: any, env: any, self: any) {
   const aIndex = tokens[idx].attrIndex('target');
   if (aIndex < 0) {
     tokens[idx].attrPush(['target', '_blank']);
