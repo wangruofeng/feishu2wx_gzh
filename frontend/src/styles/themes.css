@@ -10,7 +10,7 @@
 
 .theme-green .preview-content h1,
 .theme-green .preview-content h2 {
-  border-bottom-color: #52c41a;
+  border-bottom-color: #237804;
   color: #237804;
 }
 
@@ -61,7 +61,7 @@
 
 .theme-light .preview-content h1,
 .theme-light .preview-content h2 {
-  border-bottom-color: #1890ff;
+  border-bottom-color: #0050b3;
   color: #0050b3;
 }
 
@@ -178,7 +178,7 @@
 
 .theme-dark .preview-content h1,
 .theme-dark .preview-content h2 {
-  border-bottom-color: #4f4f4f;
+  border-bottom-color: #52c41a;
   color: #52c41a;
 }
 
@@ -256,7 +256,7 @@
 
 .theme-classic .preview-content h1,
 .theme-classic .preview-content h2 {
-  border-bottom-color: #333;
+  border-bottom-color: #000;
   color: #000;
 }
 
@@ -311,7 +311,7 @@
 
 .theme-purple .preview-content h1,
 .theme-purple .preview-content h2 {
-  border-bottom-color: #722ed1;
+  border-bottom-color: #391085;
   color: #391085;
 }
 
@@ -365,7 +365,7 @@
 
 .theme-orange .preview-content h1,
 .theme-orange .preview-content h2 {
-  border-bottom-color: #fa8c16;
+  border-bottom-color: #ad4e00;
   color: #ad4e00;
 }
 
@@ -419,7 +419,7 @@
 
 .theme-pink .preview-content h1,
 .theme-pink .preview-content h2 {
-  border-bottom-color: #eb2f96;
+  border-bottom-color: #9e1068;
   color: #9e1068;
 }
 
@@ -473,7 +473,7 @@
 
 .theme-blue .preview-content h1,
 .theme-blue .preview-content h2 {
-  border-bottom-color: #13c2c2;
+  border-bottom-color: #006d75;
   color: #006d75;
 }
 
