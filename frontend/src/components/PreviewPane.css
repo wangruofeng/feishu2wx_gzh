@@ -73,14 +73,14 @@
 }
 
 .preview-content h1 {
-  font-size: 2em;
+  font-size: 20px;
   border-bottom: 1px solid #e8e8e8;
   padding-bottom: 8px;
   text-align: center;
 }
 
 .preview-content h2 {
-  font-size: 1.5em;
+  font-size: 18px;
 }
 
 .preview-content h3 {
@@ -88,6 +88,7 @@
 }
 
 .preview-content p {
+  font-size: 16px;
   margin-bottom: 16px;
   line-height: 1.8;
 }

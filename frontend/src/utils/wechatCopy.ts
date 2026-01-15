@@ -211,6 +211,7 @@ export function formatForWeChat(html: string, theme: string = 'green', font: str
   paragraphs.forEach((p) => {
     const pEl = p as HTMLElement;
     if (pEl.textContent?.trim()) {
+      pEl.style.fontSize = '16px';
       pEl.style.marginBottom = '16px';
       pEl.style.marginTop = '0';
       pEl.style.lineHeight = '1.8';
@@ -224,7 +225,7 @@ export function formatForWeChat(html: string, theme: string = 'green', font: str
   h1Elements.forEach((h1) => {
     const h1El = h1 as HTMLElement;
     // 使用px单位，微信公众号编辑器对em单位支持可能不好
-    h1El.style.fontSize = '32px';
+    h1El.style.fontSize = '20px';
     h1El.style.marginTop = '24px';
     h1El.style.marginBottom = '16px';
     h1El.style.marginLeft = '0';
@@ -248,7 +249,7 @@ export function formatForWeChat(html: string, theme: string = 'green', font: str
   const h2Elements = tempDiv.querySelectorAll('h2');
   h2Elements.forEach((h2) => {
     const h2El = h2 as HTMLElement;
-    h2El.style.fontSize = '24px';
+    h2El.style.fontSize = '18px';
     h2El.style.marginTop = '24px';
     h2El.style.marginBottom = '16px';
     h2El.style.marginLeft = '0';
