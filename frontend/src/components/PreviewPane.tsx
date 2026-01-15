@@ -4,9 +4,10 @@ import './PreviewPane.css';
 interface Props {
   html: string;
   device: 'desktop' | 'mobile';
+  isFullscreen?: boolean;
 }
 
-const PreviewPane: React.FC<Props> = ({ html, device }) => {
+const PreviewPane: React.FC<Props> = ({ html, device, isFullscreen = false }) => {
   const previewRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -17,7 +18,7 @@ const PreviewPane: React.FC<Props> = ({ html, device }) => {
   }, [html]);
 
   return (
-    <div className="preview-pane">
+    <div className={`preview-pane ${isFullscreen ? 'fullscreen' : ''}`}>
       <div className="preview-header">
         <h2>预览效果</h2>
         <div className="device-badge">
@@ -26,7 +27,7 @@ const PreviewPane: React.FC<Props> = ({ html, device }) => {
       </div>
       <div
         ref={previewRef}
-        className={`preview-content device-${device}`}
+        className={`preview-content device-${device} ${isFullscreen ? 'fullscreen-content' : ''}`}
         dangerouslySetInnerHTML={{ __html: html || '<p class="empty-preview">预览内容将显示在这里...</p>' }}
       />
     </div>

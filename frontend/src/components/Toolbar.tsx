@@ -61,7 +61,7 @@ function greet(name) {
 
 [这是一个链接](https://example.com)
 
-![示例图片](https://via.placeholder.com/400x200)
+![示例图片](https://img1.baidu.com/it/u=352739982,3234821554&fm=253&app=138&f=JPEG?w=500&h=857)
 
 ## 表格示例
 

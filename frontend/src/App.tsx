@@ -15,12 +15,30 @@ const App: React.FC = () => {
   const [theme, setTheme] = useState<string>('green');
   const [device, setDevice] = useState<'desktop' | 'mobile'>('desktop');
   const [isCopying, setIsCopying] = useState<boolean>(false);
+  const [showEditor, setShowEditor] = useState<boolean>(true);
+  const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
 
   // 实时渲染 markdown → html
   useEffect(() => {
     const rendered = renderMarkdown(markdown);
     setHtml(rendered);
   }, [markdown]);
+
+  // 处理 ESC 键退出全屏
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isFullscreen) {
+        setIsFullscreen(false);
+      }
+    };
+
+    if (isFullscreen) {
+      window.addEventListener('keydown', handleKeyDown);
+      return () => {
+        window.removeEventListener('keydown', handleKeyDown);
+      };
+    }
+  }, [isFullscreen]);
 
   // 一键复制到微信公众号
   const handleCopyToWeChat = useCallback(async () => {
@@ -43,32 +61,52 @@ const App: React.FC = () => {
 
   return (
     <div className={`app theme-${theme}`}>
-      <header className="app-header">
+      <header className={`app-header ${isFullscreen ? 'fullscreen-header' : ''}`}>
         <div className="header-content">
           <h1 className="app-title">
             <span className="title-icon">📝</span>
             飞书文档 → 微信公众号排版器
           </h1>
           <div className="header-controls">
-            <ThemeSwitcher theme={theme} setTheme={setTheme} />
-            <DevicePreviewToggle device={device} setDevice={setDevice} />
+            {!isFullscreen && (
+              <>
+                <button
+                  className="header-btn"
+                  onClick={() => setShowEditor(!showEditor)}
+                  title={showEditor ? '隐藏源码' : '显示源码'}
+                >
+                  {showEditor ? '👁️ 隐藏源码' : '👁️‍🗨️ 显示源码'}
+                </button>
+                <ThemeSwitcher theme={theme} setTheme={setTheme} />
+                <DevicePreviewToggle device={device} setDevice={setDevice} />
+              </>
+            )}
+            <button
+              className="header-btn header-btn-exit"
+              onClick={() => setIsFullscreen(!isFullscreen)}
+              title={isFullscreen ? '退出全屏' : '全屏预览'}
+            >
+              {isFullscreen ? '⤓ 退出全屏 (ESC)' : '⛶ 全屏预览'}
+            </button>
           </div>
         </div>
       </header>
 
-      <main className={`main-container device-${device}`}>
-        <EditorPane markdown={markdown} setMarkdown={setMarkdown} />
-        <PreviewPane html={html} device={device} />
+      <main className={`main-container device-${device} ${!showEditor ? 'editor-hidden' : ''} ${isFullscreen ? 'fullscreen' : ''}`}>
+        {showEditor && <EditorPane markdown={markdown} setMarkdown={setMarkdown} />}
+        <PreviewPane html={html} device={device} isFullscreen={isFullscreen} />
       </main>
 
-      <footer className="app-footer">
-        <Toolbar 
-          markdown={markdown} 
-          setMarkdown={setMarkdown}
-          onCopyToWeChat={handleCopyToWeChat}
-          isCopying={isCopying}
-        />
-      </footer>
+      {!isFullscreen && (
+        <footer className="app-footer">
+          <Toolbar 
+            markdown={markdown} 
+            setMarkdown={setMarkdown}
+            onCopyToWeChat={handleCopyToWeChat}
+            isCopying={isCopying}
+          />
+        </footer>
+      )}
     </div>
   );
 };
