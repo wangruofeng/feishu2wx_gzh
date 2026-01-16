@@ -16,7 +16,7 @@ const Toolbar: React.FC<Props> = ({ markdown, setMarkdown, onCopyToWeChat, isCop
   };
 
   const handleLoadExample = () => {
-    const example = `# 欢迎使用飞书文档转微信公众号排版器
+    const example = `# 欢迎使用飞书文档转微信公众号排版神器
 
 这是一篇示例文章，展示了常见的 Markdown 语法。
 

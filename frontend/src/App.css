@@ -24,9 +24,7 @@
 }
 
 .app-header {
-  background: rgba(30, 30, 30, 0.75) !important;
-  backdrop-filter: blur(20px) saturate(280%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  background: #425487 !important;
   color: #ffffff;
   padding: 12px 20px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
@@ -53,6 +51,11 @@
   width: 100%;
   color: rgba(255, 255, 255, 0.85);
   letter-spacing: 0.5px;
+}
+
+.title-feishu {
+  color: #00BECA;
+  font-weight: 600;
 }
 
 .title-wechat {
