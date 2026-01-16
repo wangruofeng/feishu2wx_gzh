@@ -1,9 +1,14 @@
 .device-toggle {
   display: flex;
   gap: 4px;
-  background-color: rgba(255, 255, 255, 0.2);
+  background-color: rgba(255, 255, 255, 0.1);
   padding: 2px;
   border-radius: 6px;
+  border: none;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  height: 32px;
+  align-items: center;
 }
 
 .device-btn {
@@ -12,19 +17,24 @@
   border: none;
   border-radius: 4px;
   cursor: pointer;
-  color: white;
+  color: #ffffff;
   font-size: 12px;
   transition: all 0.2s;
   white-space: nowrap;
+  font-weight: 500;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .device-btn:hover {
-  background-color: rgba(255, 255, 255, 0.2);
+  background-color: rgba(255, 255, 255, 0.15);
 }
 
 .device-btn.active {
-  background-color: white;
-  color: #52c41a;
+  background-color: rgba(255, 255, 255, 0.25) !important;
+  color: #ffffff !important;
   font-weight: 600;
 }
 

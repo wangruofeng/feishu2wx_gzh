@@ -2,40 +2,46 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  height: 32px;
 }
 
 .font-label {
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.9);
+  color: #ffffff;
   white-space: nowrap;
+  font-weight: 500;
 }
 
 .font-select {
-  padding: 4px 8px;
-  background-color: rgba(255, 255, 255, 0.2);
-  color: white;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 4px;
+  padding: 4px 16px 4px 8px;
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
   cursor: pointer;
   font-size: 12px;
   transition: all 0.2s;
   outline: none;
   min-width: 120px;
+  font-weight: 500;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  height: 32px;
+  display: flex;
+  align-items: center;
 }
 
 .font-select:hover {
-  background-color: rgba(255, 255, 255, 0.3);
-  border-color: rgba(255, 255, 255, 0.5);
+  background-color: rgba(255, 255, 255, 0.2);
 }
 
 .font-select:focus {
-  background-color: rgba(255, 255, 255, 0.3);
-  border-color: rgba(255, 255, 255, 0.5);
+  background-color: rgba(255, 255, 255, 0.2);
 }
 
 .font-select option {
-  background-color: #333;
-  color: white;
+  background-color: #1e1e1e;
+  color: #ffffff;
   padding: 8px;
 }
 

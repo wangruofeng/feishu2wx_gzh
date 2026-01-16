@@ -8,13 +8,13 @@ interface Props {
 
 const themes = [
   { key: 'green', name: '绿意', icon: '🌿' },
-  { key: 'light', name: '明亮', icon: '☀️' },
-  { key: 'dark', name: '暗黑', icon: '🌙' },
   { key: 'classic', name: '经典', icon: '📄' },
   { key: 'purple', name: '紫色', icon: '💜' },
   { key: 'orange', name: '橙色', icon: '🧡' },
   { key: 'pink', name: '粉色', icon: '🌸' },
   { key: 'blue', name: '蓝色', icon: '💙' },
+  { key: 'red', name: '红色', icon: '❤️' },
+  { key: 'cyan', name: '青色', icon: '💎' },
 ];
 
 const ThemeSwitcher: React.FC<Props> = ({ theme, setTheme }) => {

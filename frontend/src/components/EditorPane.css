@@ -1,7 +1,9 @@
 .editor-pane {
   display: flex;
   flex-direction: column;
+  flex: 1;
   width: 50%;
+  min-width: 0;
   background-color: white;
   border-right: 1px solid #e8e8e8;
   overflow: hidden;
@@ -15,6 +17,9 @@
   background-color: #fafafa;
   border-bottom: 1px solid #e8e8e8;
   flex-shrink: 0;
+  min-height: 48px;
+  height: 48px;
+  box-sizing: border-box;
 }
 
 .editor-header h2 {

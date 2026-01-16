@@ -19,6 +19,33 @@ const App: React.FC = () => {
   const [showEditor, setShowEditor] = useState<boolean>(true);
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
   const [font, setFont] = useState<string>('default');
+  const [isSystemDark, setIsSystemDark] = useState<boolean>(false);
+
+  // 检测系统暗黑模式
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    setIsSystemDark(mediaQuery.matches);
+
+    const handleChange = (e: MediaQueryListEvent) => {
+      setIsSystemDark(e.matches);
+    };
+
+    // 监听系统暗黑模式变化
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener('change', handleChange);
+    } else {
+      // 兼容旧版浏览器
+      mediaQuery.addListener(handleChange);
+    }
+
+    return () => {
+      if (mediaQuery.removeEventListener) {
+        mediaQuery.removeEventListener('change', handleChange);
+      } else {
+        mediaQuery.removeListener(handleChange);
+      }
+    };
+  }, []);
 
   // 实时渲染 markdown → html
   useEffect(() => {
@@ -42,6 +69,10 @@ const App: React.FC = () => {
     }
   }, [isFullscreen]);
 
+  // 根据系统暗黑模式自动应用明亮或暗黑主题
+  const effectiveTheme = isSystemDark ? 'dark' : 'light';
+  const displayTheme = theme === 'light' || theme === 'dark' ? effectiveTheme : theme;
+
   // 一键复制到微信公众号
   const handleCopyToWeChat = useCallback(async () => {
     if (!html.trim()) {
@@ -51,7 +82,7 @@ const App: React.FC = () => {
 
     setIsCopying(true);
     try {
-      const result = await copyHtmlToWeChat(html, theme, font);
+      const result = await copyHtmlToWeChat(html, displayTheme, font);
       alert(result.message);
     } catch (error) {
       console.error('复制失败:', error);
@@ -59,38 +90,43 @@ const App: React.FC = () => {
     } finally {
       setIsCopying(false);
     }
-  }, [html, theme, font]);
+  }, [html, displayTheme, font]);
 
   return (
-    <div className={`app theme-${theme}`}>
+    <div className={`app theme-${displayTheme} ${isSystemDark ? 'system-dark' : 'system-light'}`}>
       <header className={`app-header ${isFullscreen ? 'fullscreen-header' : ''}`}>
         <div className="header-content">
           <h1 className="app-title">
-            <span className="title-icon">📝</span>
-            飞书文档 → 微信公众号排版器
+            飞书文档 → <span className="title-wechat">微信</span>公众号排版器
           </h1>
           <div className="header-controls">
-            {!isFullscreen && (
-              <>
-                <button
-                  className="header-btn"
-                  onClick={() => setShowEditor(!showEditor)}
-                  title={showEditor ? '隐藏源码' : '显示源码'}
-                >
-                  {showEditor ? '👁️ 隐藏源码' : '👁️‍🗨️ 显示源码'}
-                </button>
+            <div className="header-controls-wrapper">
+              <div className="header-controls-row">
                 <FontSelector font={font} setFont={setFont} />
-                <ThemeSwitcher theme={theme} setTheme={setTheme} />
                 <DevicePreviewToggle device={device} setDevice={setDevice} />
-              </>
-            )}
-            <button
-              className="header-btn header-btn-exit"
-              onClick={() => setIsFullscreen(!isFullscreen)}
-              title={isFullscreen ? '退出全屏' : '全屏预览'}
-            >
-              {isFullscreen ? '⤓ 退出全屏 (ESC)' : '⛶ 全屏预览'}
-            </button>
+                {!isFullscreen && (
+                  <button
+                    className="header-btn"
+                    onClick={() => setShowEditor(!showEditor)}
+                    title={showEditor ? '隐藏源码' : '显示源码'}
+                  >
+                    {showEditor ? '👁️ 隐藏源码' : '👁️‍🗨️ 显示源码'}
+                  </button>
+                )}
+                <button
+                  className="header-btn header-btn-exit"
+                  onClick={() => setIsFullscreen(!isFullscreen)}
+                  title={isFullscreen ? '退出全屏' : '全屏预览'}
+                >
+                  {isFullscreen ? '⤓ 退出全屏 (ESC)' : '⛶ 全屏预览'}
+                </button>
+              </div>
+              {!isFullscreen && (
+                <div className="header-controls-row header-controls-row-theme">
+                  <ThemeSwitcher theme={theme} setTheme={setTheme} />
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </header>

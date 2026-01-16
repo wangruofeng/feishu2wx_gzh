@@ -101,6 +101,28 @@ function getThemeStyles(theme: string) {
       tableHeaderBgColor: '#e6fffb',
       tableHeaderColor: '#006d75',
     },
+    red: {
+      primaryColor: '#ff4d4f',
+      primaryColorDark: '#a8071a',
+      headingColor: '#a8071a',
+      headingColorH2: '#a8071a',
+      linkColor: '#ff4d4f',
+      blockquoteBorderColor: '#ff4d4f',
+      blockquoteBgColor: '#fff1f0',
+      tableHeaderBgColor: '#fff1f0',
+      tableHeaderColor: '#a8071a',
+    },
+    cyan: {
+      primaryColor: '#13c2c2',
+      primaryColorDark: '#002329',
+      headingColor: '#002329',
+      headingColorH2: '#002329',
+      linkColor: '#13c2c2',
+      blockquoteBorderColor: '#13c2c2',
+      blockquoteBgColor: '#e6fffb',
+      tableHeaderBgColor: '#e6fffb',
+      tableHeaderColor: '#002329',
+    },
   };
 
   return themes[theme] || themes.green;

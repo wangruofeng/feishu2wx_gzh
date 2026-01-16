@@ -1,7 +1,4 @@
 /* 绿意主题 - 默认主题 */
-.theme-green .app-header {
-  background: linear-gradient(135deg, #52c41a 0%, #73d13d 100%);
-}
 
 .theme-green .preview-content {
   background-color: #ffffff;
@@ -49,10 +46,7 @@
   border-color: #73d13d;
 }
 
-/* 明亮主题 */
-.theme-light .app-header {
-  background: linear-gradient(135deg, #1890ff 0%, #40a9ff 100%);
-}
+/* 明亮主题 - 自动跟随系统浅色模式 */
 
 .theme-light .preview-content {
   background-color: #ffffff;
@@ -104,17 +98,10 @@
   color: #1890ff;
 }
 
-.theme-light .device-btn.active {
-  color: #1890ff;
-}
 
-/* 暗黑主题 */
+/* 暗黑主题 - 自动跟随系统暗黑模式 */
 .theme-dark {
   background-color: #1f1f1f;
-}
-
-.theme-dark .app-header {
-  background: linear-gradient(135deg, #2f2f2f 0%, #3f3f3f 100%);
 }
 
 .theme-dark .app-footer {
@@ -245,9 +232,6 @@
 }
 
 /* 经典主题 */
-.theme-classic .app-header {
-  background: linear-gradient(135deg, #333 0%, #555 100%);
-}
 
 .theme-classic .preview-content {
   background-color: #ffffff;
@@ -300,14 +284,7 @@
   color: #333;
 }
 
-.theme-classic .device-btn.active {
-  color: #333;
-}
-
 /* 紫色主题 */
-.theme-purple .app-header {
-  background: linear-gradient(135deg, #722ed1 0%, #9254de 100%);
-}
 
 .theme-purple .preview-content h1,
 .theme-purple .preview-content h2 {
@@ -354,14 +331,7 @@
   color: #722ed1;
 }
 
-.theme-purple .device-btn.active {
-  color: #722ed1;
-}
-
 /* 橙色主题 */
-.theme-orange .app-header {
-  background: linear-gradient(135deg, #fa8c16 0%, #ffa940 100%);
-}
 
 .theme-orange .preview-content h1,
 .theme-orange .preview-content h2 {
@@ -408,14 +378,7 @@
   color: #fa8c16;
 }
 
-.theme-orange .device-btn.active {
-  color: #fa8c16;
-}
-
 /* 粉色主题 */
-.theme-pink .app-header {
-  background: linear-gradient(135deg, #eb2f96 0%, #f759ab 100%);
-}
 
 .theme-pink .preview-content h1,
 .theme-pink .preview-content h2 {
@@ -462,14 +425,7 @@
   color: #eb2f96;
 }
 
-.theme-pink .device-btn.active {
-  color: #eb2f96;
-}
-
 /* 蓝色主题 */
-.theme-blue .app-header {
-  background: linear-gradient(135deg, #13c2c2 0%, #36cfc9 100%);
-}
 
 .theme-blue .preview-content h1,
 .theme-blue .preview-content h2 {
@@ -516,6 +472,96 @@
   color: #13c2c2;
 }
 
-.theme-blue .device-btn.active {
+
+/* 红色主题 */
+.theme-red .preview-content h1,
+.theme-red .preview-content h2 {
+  border-bottom-color: #a8071a;
+  color: #a8071a;
+}
+
+.theme-red .preview-content h3,
+.theme-red .preview-content h4,
+.theme-red .preview-content h5,
+.theme-red .preview-content h6 {
+  color: #cf1322;
+}
+
+.theme-red .preview-content blockquote {
+  border-left-color: #ff4d4f;
+  background-color: #fff1f0;
+}
+
+.theme-red .preview-content a {
+  color: #ff4d4f;
+}
+
+.theme-red .preview-content a:hover {
+  color: #ff7875;
+}
+
+.theme-red .preview-content table th {
+  background-color: #fff1f0;
+  color: #a8071a;
+}
+
+.theme-red .toolbar-btn-primary {
+  background-color: #ff4d4f;
+  border-color: #ff4d4f;
+}
+
+.theme-red .toolbar-btn-primary:hover:not(:disabled) {
+  background-color: #ff7875;
+  border-color: #ff7875;
+}
+
+.theme-red .theme-option.active {
+  color: #ff4d4f;
+}
+
+/* 青色主题 */
+.theme-cyan .preview-content h1,
+.theme-cyan .preview-content h2 {
+  border-bottom-color: #002329;
+  color: #002329;
+}
+
+.theme-cyan .preview-content h3,
+.theme-cyan .preview-content h4,
+.theme-cyan .preview-content h5,
+.theme-cyan .preview-content h6 {
+  color: #00474f;
+}
+
+.theme-cyan .preview-content blockquote {
+  border-left-color: #13c2c2;
+  background-color: #e6fffb;
+}
+
+.theme-cyan .preview-content a {
   color: #13c2c2;
 }
+
+.theme-cyan .preview-content a:hover {
+  color: #36cfc9;
+}
+
+.theme-cyan .preview-content table th {
+  background-color: #e6fffb;
+  color: #002329;
+}
+
+.theme-cyan .toolbar-btn-primary {
+  background-color: #13c2c2;
+  border-color: #13c2c2;
+}
+
+.theme-cyan .toolbar-btn-primary:hover:not(:disabled) {
+  background-color: #36cfc9;
+  border-color: #36cfc9;
+}
+
+.theme-cyan .theme-option.active {
+  color: #13c2c2;
+}
+
