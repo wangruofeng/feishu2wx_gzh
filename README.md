@@ -271,7 +271,7 @@ npm run build
 3. **查看部署状态**
    - 在 GitHub 仓库中，点击 "Actions" 标签页
    - 查看部署工作流的执行状态
-   - 部署成功后，访问 `https://wangruofeng.github.io/feishu2wx_gzh`
+   - 部署成功后，访问 `https://wangruofeng.github.io/feishu2wx`
 
 ### 方式二：使用 gh-pages 手动部署
 
@@ -371,8 +371,8 @@ npm run deploy
 
 Made with ❤️ by EcoCompress Contributors
 
-<a href="https://github.com/wangruofeng/feishu2wx_gzh/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=wangruofeng/feishu2wx_gzh" alt="Contributors" />
+<a href="https://github.com/wangruofeng/feishu2wx/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=wangruofeng/feishu2wx" alt="Contributors" />
 </a>
 
 </div>

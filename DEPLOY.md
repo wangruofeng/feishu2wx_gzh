@@ -42,7 +42,7 @@ git push origin main
 部署成功后，您的网站将可以通过以下地址访问：
 
 ```
-https://wangruofeng.github.io/feishu2wx_gzh
+https://wangruofeng.github.io/feishu2wx
 ```
 
 > **注意**：如果您的 GitHub 用户名或仓库名不同，请修改 `frontend/package.json` 中的 `homepage` 字段。
@@ -82,7 +82,7 @@ npm run deploy
 等待几分钟后，访问：
 
 ```
-https://wangruofeng.github.io/feishu2wx_gzh
+https://wangruofeng.github.io/feishu2wx
 ```
 
 ## ⚙️ 自定义配置
@@ -164,7 +164,7 @@ https://wangruofeng.github.io/feishu2wx_gzh
    - 重新构建并部署
 
 2. **检查路径问题**
-   - 如果使用子路径（如 `/feishu2wx_gzh`），确保所有资源路径都是相对路径
+   - 如果使用子路径（如 `/feishu2wx`），确保所有资源路径都是相对路径
 
 ## 📝 更新部署
 
