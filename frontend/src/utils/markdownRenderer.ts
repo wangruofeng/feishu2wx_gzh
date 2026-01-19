@@ -46,10 +46,6 @@ md.renderer.rules.link_open = function (tokens: any, idx: number, options: any, 
 };
 
 // 自定义分割线渲染
-const defaultHrRender = md.renderer.rules.hr || function(tokens: any, idx: number, options: any, env: any, self: any) {
-  return self.renderToken(tokens, idx, options);
-};
-
 md.renderer.rules.hr = function (tokens: any, idx: number, options: any, env: any, self: any) {
   return '<hr class="custom-hr">';
 };
