@@ -380,7 +380,7 @@ npm run deploy
 **享受写作的乐趣！** ✨
 **如果這個專案對您有幫助，請給個 ⭐ Star！**
 
-Made with ❤️ by EcoCompress Contributors
+Made with ❤️ by feishu2wx Contributors
 
 <a href="https://github.com/wangruofeng/feishu2wx/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=wangruofeng/feishu2wx" alt="Contributors" />
