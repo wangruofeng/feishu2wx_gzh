@@ -92,7 +92,7 @@ const App: React.FC = () => {
     } finally {
       setIsCopying(false);
     }
-  }, [html, displayTheme, font, showH1]);
+  }, [html, displayTheme, font, showH1, imageBorderStyle]);
 
   return (
     <div className={`app theme-${displayTheme} ${isSystemDark ? 'system-dark' : 'system-light'}`}>
