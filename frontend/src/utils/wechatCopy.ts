@@ -421,6 +421,33 @@ function applyThemeStyles(
     linkEl.style.textDecoration = 'none';
     linkEl.style.borderBottom = '1px solid transparent';
     linkEl.style.fontFamily = fontFamily;
+
+    // 微信编辑器会清理 a 标签的颜色，需要给内部元素也设置颜色
+    // 遍历链接内的所有子元素，给它们也设置颜色
+    const childElements = linkEl.querySelectorAll('*');
+    childElements.forEach((child) => {
+      const childEl = child as HTMLElement;
+      childEl.style.color = themeStyles.linkColor;
+    });
+
+    // 如果链接内只有文本节点（没有子元素），用 span 包裹文本并设置颜色
+    // 这样可以更有效地防止微信编辑器清理颜色
+    if (linkEl.children.length === 0 && linkEl.textContent?.trim()) {
+      const span = document.createElement('span');
+      span.style.color = themeStyles.linkColor;
+      span.textContent = linkEl.textContent;
+      linkEl.innerHTML = '';
+      linkEl.appendChild(span);
+    }
+
+    // 如果直接子元素是 strong/b/em/i/span/code 等，确保它们也有颜色
+    Array.from(linkEl.children).forEach((child) => {
+      const childEl = child as HTMLElement;
+      if (['STRONG', 'B', 'EM', 'I', 'SPAN', 'CODE'].includes(childEl.tagName)) {
+        childEl.style.color = themeStyles.linkColor;
+      }
+    });
+
     // 确保链接在新窗口打开
     if (!linkEl.target) {
       linkEl.target = '_blank';
