@@ -94,13 +94,15 @@ Fonts are loaded via Google Fonts CDN in `public/index.html`.
 ### State Management (App.tsx)
 
 - `markdown`: Current Markdown content
-- `theme`: Selected theme (default: 'green')
+- `html`: Rendered HTML preview of the current markdown
+- `theme`: Selected theme (default: 'classic')
 - `font`: Selected font (default: 'default')
 - `showEditor`: Toggle editor visibility
 - `devicePreview`: 'desktop' | 'mobile' - affects preview width
 - `isFullscreen`: Fullscreen preview mode
 - `showH1`: Toggle H1 bottom border display (default: true)
 - `imageBorderStyle`: Toggle between 'border' and 'shadow' mode for images (default: 'border')
+- `codeBlockStyle`: `'classic' | 'modern'` - code block visual style in preview (default: `'modern'`)
 - `htmlPasteDetected`: Shows modal when HTML paste is detected
 
 ### Component Structure
@@ -136,13 +138,19 @@ for (let item of items) {
 - Avoid complex HTML structures (no absolute positioning)
 - Tables need `border-collapse: collapse`
 - Images need `display: block` and `max-width: 100%`
-- Code blocks use simple background colors (no syntax highlighting in WeChat)
+- Code blocks keep a simple layout, but syntax highlighting colors are inlined so that WeChat preserves as much highlighting as possible
 
 ### Code Block Styling
 
 Two different treatments:
-1. **Preview**: Full syntax highlighting with highlight.js, custom wrapper with language header
-2. **WeChat output**: Plain gray background, monospace font (WeChat strips syntax highlighting)
+1. **Preview**:
+   - Full syntax highlighting with highlight.js (Atom One Dark theme)
+   - Two styles:
+     - `classic`: light background, simple `pre > code` blocks
+     - `modern` (default): dark "code window" with 3 colored dots header and sticky top bar, horizontally scrollable content
+2. **WeChat output**:
+   - Uses the rendered HTML from the preview and converts highlight.js classes into inline styles via `convertHighlightClassesToInlineStyles`
+   - Attempts to preserve syntax highlighting colors and font styles while keeping layout simple and WeChat‑friendly
 
 ### H1 Bottom Border Toggle
 

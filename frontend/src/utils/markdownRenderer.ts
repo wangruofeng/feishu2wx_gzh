@@ -1,24 +1,70 @@
 import MarkdownIt from 'markdown-it';
 import hljs from 'highlight.js';
-import 'highlight.js/styles/atom-one-dark.css';
 
 // 创建一个临时的 MarkdownIt 实例用于 escapeHtml
 const tempMd = new MarkdownIt();
 
-// 创建 highlight 函数（避免循环引用）
+// 代码块样式类型
+export type CodeBlockStyle = 'classic' | 'modern';
+
+// 当前代码块样式（全局变量，用于渲染时判断）
+let currentCodeBlockStyle: CodeBlockStyle = 'classic';
+
+// 设置代码块样式
+export function setCodeBlockStyle(style: CodeBlockStyle) {
+  currentCodeBlockStyle = style;
+}
+
+// 获取代码块样式
+export function getCodeBlockStyle(): CodeBlockStyle {
+  return currentCodeBlockStyle;
+}
+
+// 创建 highlight 函数（使用 highlight.js 进行语法高亮）
 function createHighlightFunction() {
   return function (str: string, lang: string): string {
     if (lang && hljs.getLanguage(lang)) {
       try {
         const highlighted = hljs.highlight(str, { language: lang }).value;
-        return `<pre class="hljs"><code>${highlighted}</code></pre>`;
-      } catch (__) {
-        // 如果高亮失败，使用转义后的文本
+        return `<pre><code class="hljs language-${lang}">${highlighted}</code></pre>`;
+      } catch (err) {
+        console.warn('Highlight.js error:', err);
       }
     }
-    // 使用临时实例的 escapeHtml 方法
-    const escaped = tempMd.utils.escapeHtml(str);
-    return `<pre><code>${escaped}</code></pre>`;
+    // 如果没有指定语言或语言不支持，尝试自动检测
+    try {
+      const highlighted = hljs.highlightAuto(str).value;
+      return `<pre><code class="hljs">${highlighted}</code></pre>`;
+    } catch (err) {
+      // 如果自动检测也失败，返回转义后的文本
+      const escaped = tempMd.utils.escapeHtml(str);
+      return `<pre><code>${escaped}</code></pre>`;
+    }
+  };
+}
+
+// 创建 highlight 函数（现代风格 - 带3个圆点）- 使用 highlight.js 进行语法高亮
+function createModernHighlightFunction() {
+  return function (str: string, lang: string): string {
+    let highlightedCode = '';
+    if (lang && hljs.getLanguage(lang)) {
+      try {
+        highlightedCode = hljs.highlight(str, { language: lang }).value;
+      } catch (err) {
+        console.warn('Highlight.js error:', err);
+        highlightedCode = tempMd.utils.escapeHtml(str);
+      }
+    } else {
+      // 如果没有指定语言或语言不支持，尝试自动检测
+      try {
+        highlightedCode = hljs.highlightAuto(str).value;
+      } catch (err) {
+        // 如果自动检测也失败，返回转义后的文本
+        highlightedCode = tempMd.utils.escapeHtml(str);
+      }
+    }
+    const langClass = lang ? `language-${lang}` : '';
+    return `<pre class="modern-code-block"><div class="code-block-header"><span class="code-block-dot red"></span><span class="code-block-dot orange"></span><span class="code-block-dot green"></span></div><div class="code-block-content"><code class="hljs ${langClass}">${highlightedCode}</code></div></pre>`;
   };
 }
 
@@ -30,7 +76,15 @@ const md: MarkdownIt = new MarkdownIt({
   highlight: createHighlightFunction(),
 });
 
-// 配置链接在新窗口打开
+// 创建现代风格的 MarkdownIt 实例
+const mdModern: MarkdownIt = new MarkdownIt({
+  html: true,
+  linkify: true,
+  typographer: true,
+  highlight: createModernHighlightFunction(),
+});
+
+// 配置链接在新窗口打开（经典风格）
 const defaultRender = md.renderer.rules.link_open || function(tokens: any, idx: number, options: any, env: any, self: any) {
   return self.renderToken(tokens, idx, options);
 };
@@ -45,8 +99,28 @@ md.renderer.rules.link_open = function (tokens: any, idx: number, options: any, 
   return defaultRender(tokens, idx, options, env, self);
 };
 
-// 自定义分割线渲染
+// 自定义分割线渲染（经典风格）
 md.renderer.rules.hr = function (tokens: any, idx: number, options: any, env: any, self: any) {
+  return '<hr class="custom-hr">';
+};
+
+// 配置链接在新窗口打开（现代风格）
+const defaultRenderModern = mdModern.renderer.rules.link_open || function(tokens: any, idx: number, options: any, env: any, self: any) {
+  return self.renderToken(tokens, idx, options);
+};
+
+mdModern.renderer.rules.link_open = function (tokens: any, idx: number, options: any, env: any, self: any) {
+  const aIndex = tokens[idx].attrIndex('target');
+  if (aIndex < 0) {
+    tokens[idx].attrPush(['target', '_blank']);
+  } else {
+    tokens[idx].attrs![aIndex][1] = '_blank';
+  }
+  return defaultRenderModern(tokens, idx, options, env, self);
+};
+
+// 自定义分割线渲染（现代风格）
+mdModern.renderer.rules.hr = function (tokens: any, idx: number, options: any, env: any, self: any) {
   return '<hr class="custom-hr">';
 };
 
@@ -79,8 +153,8 @@ md.renderer.rules.bullet_list_close = defaultListClose;
 md.renderer.rules.ordered_list_open = defaultOrderedListOpen;
 md.renderer.rules.ordered_list_close = defaultOrderedListClose;
 
-// 在列表中的段落移除外边距
-md.renderer.rules.paragraph_open = function (tokens: any, idx: number, options: any, env: any, self: any) {
+// 在列表中的段落移除外边距（经典风格）
+md.renderer.rules.paragraph_open = function (tokens: any, idx: number, options: any, _env: any, self: any) {
   const result = self.renderToken(tokens, idx, options);
   // 如果在列表中，添加一个特殊类
   if (inList) {
@@ -89,20 +163,57 @@ md.renderer.rules.paragraph_open = function (tokens: any, idx: number, options: 
   return result;
 };
 
+// 在列表中的段落移除外边距（现代风格）
+mdModern.renderer.rules.paragraph_open = function (tokens: any, idx: number, options: any, _env: any, self: any) {
+  const result = self.renderToken(tokens, idx, options);
+  // 如果在列表中，添加一个特殊类
+  if (inList) {
+    return result.replace('<p>', '<p class="in-list">');
+  }
+  return result;
+};
+
+// 现代风格的列表处理（复用 inList 变量）
+const defaultListOpenModern = mdModern.renderer.rules.bullet_list_open || function(tokens: any, idx: number, options: any, _env: any, self: any) {
+  inList = true;
+  return self.renderToken(tokens, idx, options);
+};
+
+const defaultListCloseModern = mdModern.renderer.rules.bullet_list_close || function(tokens: any, idx: number, options: any, _env: any, self: any) {
+  inList = false;
+  return self.renderToken(tokens, idx, options);
+};
+
+const defaultOrderedListOpenModern = mdModern.renderer.rules.ordered_list_open || function(tokens: any, idx: number, options: any, _env: any, self: any) {
+  inList = true;
+  return self.renderToken(tokens, idx, options);
+};
+
+const defaultOrderedListCloseModern = mdModern.renderer.rules.ordered_list_close || function(tokens: any, idx: number, options: any, _env: any, self: any) {
+  inList = false;
+  return self.renderToken(tokens, idx, options);
+};
+
+mdModern.renderer.rules.bullet_list_open = defaultListOpenModern;
+mdModern.renderer.rules.bullet_list_close = defaultListCloseModern;
+mdModern.renderer.rules.ordered_list_open = defaultOrderedListOpenModern;
+mdModern.renderer.rules.ordered_list_close = defaultOrderedListCloseModern;
+
 export function renderMarkdown(markdown: string): string {
-  let html = md.render(markdown);
-  
+  const selectedMd = currentCodeBlockStyle === 'modern' ? mdModern : md;
+  let html = selectedMd.render(markdown);
+
   // 处理被误识别为链接的 .md 文件名
   // 将指向 .md 文件的链接转换回普通文本
   const tempDiv = document.createElement('div');
   tempDiv.innerHTML = html;
-  
+
   // 查找所有链接
   const links = tempDiv.querySelectorAll('a');
   links.forEach((link) => {
     const href = link.getAttribute('href') || '';
     const text = link.textContent || '';
-    
+
     // 如果链接指向 .md 文件，且链接文本就是文件名，则转换为普通文本
     if (href.toLowerCase().endsWith('.md') && text.toLowerCase().endsWith('.md')) {
       // 将链接替换为普通文本节点
@@ -110,6 +221,6 @@ export function renderMarkdown(markdown: string): string {
       link.parentNode?.replaceChild(textNode, link);
     }
   });
-  
+
   return tempDiv.innerHTML;
 }

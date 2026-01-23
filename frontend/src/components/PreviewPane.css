@@ -179,11 +179,95 @@
   border-radius: 6px;
   overflow-x: auto;
   margin-bottom: 16px;
+  white-space: pre;
+  color: #333;
 }
 
 .preview-content pre code {
   background-color: transparent;
   padding: 0;
+  font-weight: normal;
+  white-space: pre;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  color: #333;
+}
+
+/* 现代代码块样式 - 带语言标签 */
+.preview-content pre.modern-code-block {
+  background-color: #282c34;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 16px;
+  padding: 0;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.preview-content pre.modern-code-block .code-block-header {
+  background-color: #21252b;
+  padding: 10px 16px;
+  border-bottom: 1px solid #3e4451;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  position: sticky;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  flex-shrink: 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.preview-content pre.modern-code-block .code-block-content {
+  overflow-x: auto;
+  overflow-y: visible;
+  flex: 1;
+}
+
+.preview-content pre.modern-code-block .code-block-content > code {
+  display: block;
+  min-width: fit-content;
+  white-space: pre;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  padding: 16px;
+  background-color: transparent;
+}
+
+/* highlight.js 语法高亮样式会在预览中自动应用 */
+.preview-content pre.modern-code-block .code-block-content > code.hljs {
+  color: #abb2bf;
+}
+
+.preview-content pre.modern-code-block .code-block-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.preview-content pre.modern-code-block .code-block-dot.red {
+  background-color: #ff5f56;
+}
+
+.preview-content pre.modern-code-block .code-block-dot.orange {
+  background-color: #ffbd2e;
+}
+
+.preview-content pre.modern-code-block .code-block-dot.green {
+  background-color: #27c93f;
+}
+
+.preview-content pre.modern-code-block > code {
+  display: block;
+  padding: 16px;
+  font-size: 14px;
+  line-height: 1.5;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  color: #abb2bf;
+  background-color: transparent;
   font-weight: normal;
 }
 
