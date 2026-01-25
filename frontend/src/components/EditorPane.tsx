@@ -9,24 +9,35 @@ interface Props {
 
 const EditorPane: React.FC<Props> = ({ markdown, setMarkdown }) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // 处理粘贴事件
   const handlePaste = useCallback(async (e: React.ClipboardEvent) => {
     const htmlData = e.clipboardData.getData('text/html');
     const textData = e.clipboardData.getData('text/plain');
-    
-    // 如果有HTML数据（比如从飞书复制），转换为Markdown
-    if (htmlData && htmlData.trim()) {
+
+    // 判断是否应该使用 HTML 转换
+    // 1. 飞书/飞书文档的 HTML 包含特定标识
+    // 2. 如果 HTML 包含这些特征，说明是从富文本编辑器复制的，需要转换
+    const shouldConvertHtml = htmlData && htmlData.trim() && (
+      htmlData.includes('feishu') ||
+      htmlData.includes('larksuite') ||
+      htmlData.includes('feishu.cn') ||
+      htmlData.includes('lark')
+    );
+
+    // 如果有HTML数据且来自飞书等富文本编辑器，转换为Markdown
+    if (shouldConvertHtml) {
       e.preventDefault();
       const md = convertHtmlToMarkdown(htmlData);
-      
+
       const textarea = textareaRef.current;
       if (textarea) {
         const start = textarea.selectionStart;
         const end = textarea.selectionEnd;
         const newMd = markdown.slice(0, start) + md + markdown.slice(end);
         setMarkdown(newMd);
-        
+
         // 恢复光标位置
         setTimeout(() => {
           const newPos = start + md.length;
@@ -34,7 +45,11 @@ const EditorPane: React.FC<Props> = ({ markdown, setMarkdown }) => {
           textarea.focus();
         }, 0);
       }
-    } else if (textData) {
+      return;
+    }
+
+    // 其他情况使用纯文本（包括从 Cursor/VS Code 等复制的 Markdown）
+    if (textData) {
       // 纯文本直接插入
       const textarea = textareaRef.current;
       if (textarea) {
@@ -67,10 +82,56 @@ const EditorPane: React.FC<Props> = ({ markdown, setMarkdown }) => {
     }, 0);
   }, [markdown, setMarkdown]);
 
+  // 处理文件导入
+  const handleFileImport = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // 检查文件类型
+    if (!file.name.endsWith('.md') && file.type !== 'text/markdown') {
+      alert('请选择 Markdown 文件 (.md)');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const content = event.target?.result;
+      if (typeof content === 'string') {
+        setMarkdown(content);
+      }
+    };
+    reader.onerror = () => {
+      alert('读取文件失败，请重试');
+    };
+    reader.readAsText(file);
+
+    // 重置 input 以便可以重复选择同一个文件
+    e.target.value = '';
+  }, [setMarkdown]);
+
+  // 触发文件选择
+  const triggerFileInput = useCallback(() => {
+    fileInputRef.current?.click();
+  }, []);
+
   return (
     <div className="editor-pane">
       <div className="editor-header">
         <h2>Markdown 源码</h2>
+        <button
+          className="import-button"
+          onClick={triggerFileInput}
+          title="从本地 Markdown 文件导入"
+        >
+          📁 导入文件
+        </button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".md,text/markdown"
+          onChange={handleFileImport}
+          style={{ display: 'none' }}
+        />
       </div>
 
       <div className="editor-container">

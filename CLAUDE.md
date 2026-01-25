@@ -12,6 +12,7 @@ feishu2wx is a pure frontend React application that converts Feishu (Lark) docum
 # Development (run from project root)
 npm run install:frontend    # Install frontend dependencies
 npm start                   # Start dev server on port 3000
+npm run pre-commit-check    # Run pre-commit checks (version & docs)
 
 # Development (run from frontend/ directory)
 cd frontend
@@ -108,7 +109,7 @@ Fonts are loaded via Google Fonts CDN in `public/index.html`.
 ### Component Structure
 
 - `App.tsx`: Main container, manages all state, handles keyboard shortcuts (ESC for fullscreen)
-- `EditorPane.tsx`: Textarea with toolbar, detects HTML paste via clipboard API
+- `EditorPane.tsx`: Textarea with toolbar, detects HTML paste via clipboard API, supports local .md file import
 - `PreviewPane.tsx`: Renders HTML output, device-specific width styling
 - `Toolbar.tsx`: Bottom action buttons (copy, fullscreen, editor toggle, theme/font selectors)
 - `ThemeSwitcher.tsx`, `FontSelector.tsx`, `DevicePreviewToggle.tsx`: Settings UI
@@ -185,3 +186,54 @@ When modifying rendering logic:
 - GitHub Pages deployment via `gh-pages` package
 - Homepage set in `frontend/package.json`: `"homepage": "."`
 - Deploy command: `cd frontend && npm run deploy`
+
+## Development Workflow
+
+### File Import Feature
+
+EditorPane supports importing local Markdown files:
+- Click "📁 导入文件" button in the editor header
+- Select any `.md` file from your local system
+- File content is automatically loaded into the editor
+- Useful for importing Markdown from Cursor, VS Code, or other editors
+
+### Smart Paste Detection
+
+The editor intelligently handles paste operations:
+- **Feishu/Lark**: HTML is automatically converted to Markdown using custom rules
+- **Cursor/VS Code**: Plain text Markdown is used directly (no double conversion)
+- **Other sources**: Falls back to plain text
+
+Detection logic checks for feishu/larksuite/lark keywords in HTML clipboard data.
+
+### Pre-commit Checks
+
+The project uses Husky for Git hooks that automatically run checks before each commit:
+
+**Checks performed**:
+1. **Version number verification**: Ensures `frontend/package.json` version is updated
+2. **Documentation update reminder**: Prompts to update docs if source code changed
+
+**Run manually**:
+```bash
+npm run pre-commit-check
+```
+
+**Bypass checks** (if needed):
+```bash
+git commit --no-verify -m "message"
+```
+
+See `scripts/PRE_COMMIT_CHECK.md` for details.
+
+### Version Management
+
+- Follow Semantic Versioning: `MAJOR.MINOR.PATCH`
+- Version defined in `frontend/package.json`
+- Pre-commit hook prevents commits without version updates
+- Typical workflow:
+  1. Make code changes
+  2. Update version (e.g., 1.3.0 → 1.4.0)
+  3. Update documentation if needed
+  4. Run `npm run pre-commit-check` (optional - runs automatically on commit)
+  5. Commit - Husky runs checks automatically

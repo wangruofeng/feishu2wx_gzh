@@ -4,9 +4,16 @@
   "description": "飞书文档转微信公众号排版工具",
   "scripts": {
     "install:frontend": "cd frontend && npm install",
-    "start": "cd frontend && npm start"
+    "start": "cd frontend && npm start",
+    "pre-commit-check": "node scripts/pre-commit-check.js",
+    "prepare": "husky"
   },
-  "keywords": ["feishu", "wechat", "markdown", "editor"],
+  "keywords": [
+    "feishu",
+    "wechat",
+    "markdown",
+    "editor"
+  ],
   "author": "",
   "license": "MIT"
 }
