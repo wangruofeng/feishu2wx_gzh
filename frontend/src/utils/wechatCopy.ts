@@ -1,3 +1,5 @@
+import { CodeBlockStyle } from './markdownRenderer';
+
 /**
  * 获取主题相关的样式配置
  */
@@ -171,7 +173,14 @@ function getFontFamily(fontKey: string): string {
  *
  * 方案：直接使用主题配置应用样式，确保颜色值准确且为十六进制格式
  */
-export function formatForWeChat(html: string, theme: string = 'green', font: string = 'default', showH1: boolean = true, imageBorderStyle: 'border' | 'shadow' = 'border'): string {
+export function formatForWeChat(
+  html: string,
+  theme: string = 'green',
+  font: string = 'default',
+  showH1: boolean = true,
+  imageBorderStyle: 'border' | 'shadow' = 'border',
+  codeBlockStyle: CodeBlockStyle = 'classic'
+): string {
   const themeStyles = getThemeStyles(theme);
   const fontFamily = getFontFamily(font);
 
@@ -180,9 +189,190 @@ export function formatForWeChat(html: string, theme: string = 'green', font: str
   tempDiv.innerHTML = html;
 
   // 直接应用主题样式（使用可靠的主题配置，而不是不稳定的计算样式）
-  applyThemeStyles(tempDiv, themeStyles, fontFamily, showH1, imageBorderStyle);
+  applyThemeStyles(tempDiv, themeStyles, fontFamily, showH1, imageBorderStyle, codeBlockStyle);
 
   return tempDiv.innerHTML;
+}
+
+/**
+ * 从预览 DOM 中读取实际的样式并应用到目标元素
+ * 这样可以确保预览和微信拷贝的样式完全一致
+ */
+function convertHighlightClassesToInlineStyles(element: HTMLElement, isDark: boolean): void {
+  // 如果没有子元素（纯文本），直接返回，不处理
+  if (element.children.length === 0 && !element.querySelector('span')) {
+    return;
+  }
+
+  // 尝试从实际的预览 DOM 中查找对应的代码块
+  const previewContent = document.querySelector('.preview-content');
+  let sourceElement: HTMLElement | null = null;
+  
+  if (previewContent) {
+    // 查找预览中对应的代码块（通过比较内容）
+    const codeBlocks = previewContent.querySelectorAll('pre code');
+    const targetText = element.textContent?.trim();
+    for (let i = 0; i < codeBlocks.length; i++) {
+      const codeBlock = codeBlocks[i];
+      if (codeBlock.textContent?.trim() === targetText) {
+        sourceElement = codeBlock as HTMLElement;
+        break;
+      }
+    }
+  }
+
+  // 如果找到了预览中的对应元素，直接使用；否则创建临时容器
+  let previewContainer: HTMLElement | null = null;
+  let clonedElement: HTMLElement | null = null;
+  
+  if (sourceElement) {
+    clonedElement = sourceElement;
+  } else {
+    // 创建一个临时的预览容器，应用相同的 CSS 类
+    previewContainer = document.createElement('div');
+    previewContainer.className = 'preview-content';
+    previewContainer.style.position = 'absolute';
+    previewContainer.style.left = '-9999px';
+    previewContainer.style.top = '0';
+    previewContainer.style.visibility = 'hidden';
+    previewContainer.style.width = '800px'; // 设置宽度以确保样式正确计算
+    document.body.appendChild(previewContainer);
+    
+    // 克隆元素到预览容器中（深拷贝以保留所有文本节点）
+    clonedElement = element.cloneNode(true) as HTMLElement;
+    previewContainer.appendChild(clonedElement);
+    
+    // 强制浏览器计算样式
+    void clonedElement.offsetHeight;
+  }
+
+  try {
+    if (!clonedElement) {
+      return;
+    }
+
+    // 递归处理所有子元素和文本节点，从预览容器读取样式并应用到目标元素
+    const processElement = (sourceEl: Node, targetEl: Node) => {
+      if (sourceEl instanceof HTMLElement && targetEl instanceof HTMLElement) {
+        // 获取计算样式
+        const computedStyle = window.getComputedStyle(sourceEl);
+        const color = computedStyle.color;
+        const fontWeight = computedStyle.fontWeight;
+        const fontStyle = computedStyle.fontStyle;
+        const backgroundColor = computedStyle.backgroundColor;
+
+        // 应用样式到目标元素
+        // 只应用非默认值
+        if (color) {
+          // 排除默认的黑色（rgb(0,0,0) 或接近黑色）
+          const rgbMatch = color.match(/\d+/g);
+          if (rgbMatch && rgbMatch.length >= 3) {
+            const r = parseInt(rgbMatch[0]);
+            const g = parseInt(rgbMatch[1]);
+            const b = parseInt(rgbMatch[2]);
+            // 如果不是纯黑色或接近黑色，应用颜色
+            if (r > 10 || g > 10 || b > 10) {
+              targetEl.style.color = color;
+            }
+          } else {
+            // 如果不是 RGB 格式，直接应用（可能是颜色名称或 hex）
+            targetEl.style.color = color;
+          }
+        }
+        if (fontWeight && fontWeight !== 'normal' && fontWeight !== '400') {
+          targetEl.style.fontWeight = fontWeight;
+        }
+        if (fontStyle && fontStyle !== 'normal') {
+          targetEl.style.fontStyle = fontStyle;
+        }
+        if (backgroundColor) {
+          // 排除透明背景
+          const rgbMatch = backgroundColor.match(/\d+/g);
+          if (rgbMatch && rgbMatch.length >= 4) {
+            const alpha = parseFloat(rgbMatch[3] || '1');
+            if (alpha > 0.01) {
+              targetEl.style.backgroundColor = backgroundColor;
+            }
+          } else if (backgroundColor !== 'transparent' && backgroundColor !== 'rgba(0, 0, 0, 0)') {
+            targetEl.style.backgroundColor = backgroundColor;
+          }
+        }
+
+        // 确保保留空白字符
+        targetEl.style.whiteSpace = 'pre';
+
+        // 移除类名（因为已经转换为内联样式）
+        const classes = Array.from(targetEl.classList);
+        classes.forEach(cls => {
+          if (cls.startsWith('hljs-')) {
+            targetEl.classList.remove(cls);
+          }
+        });
+      } else if (sourceEl.nodeType === Node.TEXT_NODE && targetEl.nodeType === Node.TEXT_NODE) {
+        // 文本节点：确保内容一致（包括空白字符）
+        if (sourceEl.textContent !== targetEl.textContent) {
+          targetEl.textContent = sourceEl.textContent;
+        }
+        return; // 文本节点没有子节点
+      }
+
+      // 递归处理所有子节点（包括文本节点和元素节点）
+      const sourceChildNodes = Array.from(sourceEl.childNodes);
+      const targetChildNodes = Array.from(targetEl.childNodes);
+      
+      // 确保目标元素有足够的子节点
+      while (targetChildNodes.length < sourceChildNodes.length) {
+        const sourceNode = sourceChildNodes[targetChildNodes.length];
+        if (sourceNode.nodeType === Node.TEXT_NODE) {
+          targetEl.appendChild(document.createTextNode(sourceNode.textContent || ''));
+        } else if (sourceNode instanceof HTMLElement) {
+          const cloned = sourceNode.cloneNode(false) as HTMLElement;
+          targetEl.appendChild(cloned);
+        }
+        targetChildNodes.push(targetEl.lastChild!);
+      }
+
+      // 处理所有匹配的子节点
+      for (let i = 0; i < Math.min(sourceChildNodes.length, targetChildNodes.length); i++) {
+        processElement(sourceChildNodes[i], targetChildNodes[i]);
+      }
+    };
+
+    // 处理所有子节点（包括文本节点）
+    if (clonedElement) {
+      const sourceChildNodes = Array.from(clonedElement.childNodes);
+      const targetChildNodes = Array.from(element.childNodes);
+      
+      // 确保目标元素有足够的子节点
+      while (targetChildNodes.length < sourceChildNodes.length) {
+        const sourceNode = sourceChildNodes[targetChildNodes.length];
+        if (sourceNode && sourceNode.nodeType === Node.TEXT_NODE) {
+          element.appendChild(document.createTextNode(sourceNode.textContent || ''));
+        } else if (sourceNode instanceof HTMLElement) {
+          const cloned = sourceNode.cloneNode(false) as HTMLElement;
+          element.appendChild(cloned);
+        }
+        const lastChild = element.lastChild;
+        if (lastChild) {
+          targetChildNodes.push(lastChild);
+        }
+      }
+
+      // 处理所有匹配的子节点
+      for (let i = 0; i < Math.min(sourceChildNodes.length, targetChildNodes.length); i++) {
+        const sourceNode = sourceChildNodes[i];
+        const targetNode = targetChildNodes[i];
+        if (sourceNode && targetNode) {
+          processElement(sourceNode, targetNode);
+        }
+      }
+    }
+  } finally {
+    // 清理临时容器（如果创建了的话）
+    if (previewContainer && previewContainer.parentNode) {
+      document.body.removeChild(previewContainer);
+    }
+  }
 }
 
 /**
@@ -194,7 +384,8 @@ function applyThemeStyles(
   themeStyles: ReturnType<typeof getThemeStyles>,
   fontFamily: string,
   showH1: boolean,
-  imageBorderStyle: 'border' | 'shadow'
+  imageBorderStyle: 'border' | 'shadow',
+  codeBlockStyle: CodeBlockStyle
 ): void {
   // 首先设置容器的字体，作为默认字体
   container.style.fontFamily = fontFamily;
@@ -242,31 +433,179 @@ function applyThemeStyles(
     codeEl.style.fontWeight = 'bold';
   });
 
-  // 处理代码块：微信公众号不支持代码高亮，转换为纯文本样式
+  // 处理代码块：保留语法高亮的 HTML 结构，转换为内联样式
   const codeBlocks = container.querySelectorAll('pre');
   codeBlocks.forEach((pre) => {
     const preEl = pre as HTMLElement;
-    preEl.style.backgroundColor = '#f5f5f5';
-    preEl.style.padding = '16px';
-    preEl.style.borderRadius = '6px';
-    preEl.style.overflowX = 'auto';
-    preEl.style.marginBottom = '16px';
-    preEl.style.fontSize = '14px';
-    preEl.style.lineHeight = '1.5';
-    preEl.style.fontFamily = 'Consolas, Monaco, "Courier New", monospace';
-    preEl.style.color = '#333';
-    
-    // 处理代码块内的code标签
-    const codeInPre = preEl.querySelectorAll('code');
-    codeInPre.forEach((code) => {
-      const codeEl = code as HTMLElement;
-      codeEl.style.backgroundColor = 'transparent';
-      codeEl.style.padding = '0';
-      codeEl.style.borderRadius = '0';
-      codeEl.style.fontSize = 'inherit';
-      codeEl.style.fontFamily = 'inherit';
-      codeEl.style.color = 'inherit';
-    });
+    const isModern = codeBlockStyle === 'modern' && preEl.classList.contains('modern-code-block');
+
+    // 获取头部和 code 元素
+    const header = preEl.querySelector('.code-block-header');
+    // 优先查找 code-block-content 内的 code，如果没有则直接查找 code
+    const codeContainer = preEl.querySelector('.code-block-content');
+    const codeEl = codeContainer ? codeContainer.querySelector('code') : preEl.querySelector('code');
+    if (!codeEl) return;
+
+    // 如果是现代样式且有头部，先克隆头部（在清空之前）
+    let headerClone: HTMLElement | null = null;
+    if (isModern && header) {
+      headerClone = header.cloneNode(true) as HTMLElement;
+    }
+
+    // 保留 code 元素内部的 HTML 结构（包括语法高亮的 span 标签）
+    // 使用 cloneNode 深拷贝以保留所有文本节点和空白字符
+    const codeClone = codeEl.cloneNode(true) as HTMLElement;
+    const codeHtml = codeClone.innerHTML;
+    // 检查是否有语法高亮的元素（highlight.js 生成的元素通常有以 hljs- 开头的类名）
+    // 使用属性选择器 [class*="hljs-"] 来匹配包含 hljs- 的类名
+    const hasHighlighting = codeEl.querySelector('[class*="hljs-"]') !== null || 
+                            codeEl.querySelector('.hljs span') !== null ||
+                            codeEl.querySelector('span[class*="hljs"]') !== null;
+
+    // 清空 pre 元素，重新构建内容
+    preEl.innerHTML = '';
+
+    // 如果是现代样式且有头部，保留头部并应用内联样式
+    if (isModern && headerClone) {
+      const headerEl = headerClone;
+      
+      // 头部容器样式 - 固定在顶部，横向滚动时不动
+      headerEl.style.backgroundColor = '#21252b';
+      headerEl.style.padding = '10px 16px';
+      headerEl.style.borderBottom = '1px solid #3e4451';
+      headerEl.style.display = 'flex';
+      headerEl.style.alignItems = 'center';
+      headerEl.style.gap = '6px';
+      headerEl.style.margin = '0';
+      headerEl.style.borderTopLeftRadius = '8px';
+      headerEl.style.borderTopRightRadius = '8px';
+      headerEl.style.position = 'sticky';
+      headerEl.style.top = '0';
+      headerEl.style.zIndex = '10';
+      headerEl.style.flexShrink = '0';
+      
+      // 处理3个圆点
+      const dots = headerEl.querySelectorAll('.code-block-dot');
+      dots.forEach((dot, index) => {
+        const dotEl = dot as HTMLElement;
+        dotEl.style.width = '12px';
+        dotEl.style.height = '12px';
+        dotEl.style.borderRadius = '50%';
+        dotEl.style.display = 'inline-block';
+        dotEl.style.margin = '0';
+        dotEl.style.padding = '0';
+        dotEl.style.border = 'none';
+        
+        // 根据类名设置颜色
+        if (dotEl.classList.contains('red')) {
+          dotEl.style.backgroundColor = '#ff5f56';
+        } else if (dotEl.classList.contains('orange')) {
+          dotEl.style.backgroundColor = '#ffbd2e';
+        } else if (dotEl.classList.contains('green')) {
+          dotEl.style.backgroundColor = '#27c93f';
+        }
+        
+        // 移除类名（因为已经转换为内联样式）
+        dotEl.className = '';
+      });
+      
+      // 移除头部的类名
+      headerEl.className = '';
+      
+      preEl.appendChild(headerEl);
+    }
+
+    // 创建新的 code 元素，保留原有的 HTML 结构（包括语法高亮）
+    const newCodeEl = document.createElement('code');
+    // 直接设置 innerHTML 以保留所有空白字符和 HTML 结构
+    newCodeEl.innerHTML = codeHtml;
+    // 确保保留空白字符
+    newCodeEl.setAttribute('data-preserve-whitespace', 'true');
+
+    if (isModern) {
+      // 现代样式：深色背景，类似 IDE（Atom One Dark 主题）
+      preEl.style.backgroundColor = '#282c34';
+      preEl.style.padding = '0';
+      preEl.style.borderRadius = '8px';
+      preEl.style.marginBottom = '16px';
+      preEl.style.fontSize = '14px';
+      preEl.style.lineHeight = '1.5';
+      preEl.style.fontFamily = 'Consolas, Monaco, "Courier New", monospace';
+      preEl.style.display = 'flex';
+      preEl.style.flexDirection = 'column';
+      preEl.style.overflow = 'hidden';
+      preEl.style.whiteSpace = 'pre';
+
+      // 创建一个可滚动的代码容器
+      const codeContainer = document.createElement('div');
+      codeContainer.style.overflowX = 'auto';
+      codeContainer.style.overflowY = 'visible';
+      codeContainer.style.flex = '1';
+      codeContainer.style.whiteSpace = 'pre';
+
+      // code 元素样式
+      newCodeEl.style.backgroundColor = 'transparent';
+      newCodeEl.style.padding = '16px';
+      newCodeEl.style.display = 'block';
+      newCodeEl.style.color = '#e6e6e6';
+      newCodeEl.style.borderRadius = '0';
+      newCodeEl.style.fontSize = '14px';
+      newCodeEl.style.fontFamily = 'Consolas, Monaco, "Courier New", monospace';
+      newCodeEl.style.minWidth = 'fit-content';
+      newCodeEl.style.whiteSpace = 'pre';
+      newCodeEl.style.wordBreak = 'keep-all';
+      newCodeEl.style.wordWrap = 'normal';
+
+      // 如果有语法高亮，将 highlight.js 的 CSS 类转换为内联样式
+      // 如果没有语法高亮，直接使用原始 HTML，确保空白字符被保留
+      if (hasHighlighting) {
+        convertHighlightClassesToInlineStyles(newCodeEl, true);
+      } else {
+        // 对于没有语法高亮的代码块，确保 white-space 正确设置
+        newCodeEl.style.whiteSpace = 'pre';
+      }
+
+      // 将 code 元素添加到可滚动容器
+      codeContainer.appendChild(newCodeEl);
+      
+      // 将可滚动容器添加到 pre（在头部之后）
+      preEl.appendChild(codeContainer);
+    } else {
+      // 经典样式：浅色背景
+      preEl.style.backgroundColor = '#f5f5f5';
+      preEl.style.padding = '16px';
+      preEl.style.borderRadius = '6px';
+      preEl.style.overflowX = 'auto';
+      preEl.style.marginBottom = '16px';
+      preEl.style.fontSize = '14px';
+      preEl.style.lineHeight = '1.5';
+      preEl.style.fontFamily = 'Consolas, Monaco, "Courier New", monospace';
+      preEl.style.color = '#333';
+      preEl.style.whiteSpace = 'pre';
+
+      // code 元素样式
+      newCodeEl.style.backgroundColor = 'transparent';
+      newCodeEl.style.padding = '0';
+      newCodeEl.style.color = '#333';
+      newCodeEl.style.borderRadius = '0';
+      newCodeEl.style.fontSize = '14px';
+      newCodeEl.style.fontFamily = 'Consolas, Monaco, "Courier New", monospace';
+      newCodeEl.style.whiteSpace = 'pre';
+      newCodeEl.style.wordBreak = 'keep-all';
+      newCodeEl.style.wordWrap = 'normal';
+
+      // 如果有语法高亮，将 highlight.js 的 CSS 类转换为内联样式
+      // 如果没有语法高亮，直接使用原始 HTML，确保空白字符被保留
+      if (hasHighlighting) {
+        convertHighlightClassesToInlineStyles(newCodeEl, false);
+      } else {
+        // 对于没有语法高亮的代码块，确保 white-space 正确设置
+        newCodeEl.style.whiteSpace = 'pre';
+      }
+
+      // 将新的 code 元素添加到 pre（经典样式）
+      preEl.appendChild(newCodeEl);
+    }
   });
 
   // 处理段落间距
@@ -532,121 +871,237 @@ function applyThemeStyles(
 }
 
 /**
+ * 获取预览区域中选中的 HTML 内容
+ */
+function getSelectedHtmlFromPreview(): string | null {
+  const selection = window.getSelection();
+  if (!selection || selection.rangeCount === 0) {
+    return null;
+  }
+
+  const range = selection.getRangeAt(0);
+  const previewElement = document.querySelector('.preview-content');
+  
+  if (!previewElement) {
+    return null;
+  }
+
+  // 检查选中内容是否在预览区域内
+  if (!previewElement.contains(range.commonAncestorContainer)) {
+    return null;
+  }
+
+  // 创建临时容器来获取选中的 HTML
+  const tempDiv = document.createElement('div');
+  tempDiv.appendChild(range.cloneContents());
+  return tempDiv.innerHTML;
+}
+
+/**
+ * 复制选中的内容到微信公众号编辑器
+ */
+export async function copySelectedToWeChat(
+  theme: string = 'green',
+  font: string = 'default',
+  showH1: boolean = true,
+  imageBorderStyle: 'border' | 'shadow' = 'border',
+  codeBlockStyle: CodeBlockStyle = 'classic'
+): Promise<{ success: boolean; message: string }> {
+  const selectedHtml = getSelectedHtmlFromPreview();
+  
+  if (!selectedHtml || !selectedHtml.trim()) {
+    return { 
+      success: false, 
+      message: '请先在预览区域选择要复制的内容' 
+    };
+  }
+
+  return copyHtmlToWeChat(selectedHtml, theme, font, showH1, imageBorderStyle, codeBlockStyle);
+}
+
+/**
  * 复制HTML内容到微信公众号编辑器
  * 使用 Clipboard API 的 write 方法来复制富文本格式
  */
-export async function copyHtmlToWeChat(html: string, theme: string = 'green', font: string = 'default', showH1: boolean = true, imageBorderStyle: 'border' | 'shadow' = 'border'): Promise<{ success: boolean; message: string }> {
+export async function copyHtmlToWeChat(
+  html: string,
+  theme: string = 'green',
+  font: string = 'default',
+  showH1: boolean = true,
+  imageBorderStyle: 'border' | 'shadow' = 'border',
+  codeBlockStyle: CodeBlockStyle = 'classic'
+): Promise<{ success: boolean; message: string }> {
   if (!html || !html.trim()) {
     return { success: false, message: '没有内容可复制' };
   }
 
-  const formattedHtml = formatForWeChat(html, theme, font, showH1, imageBorderStyle);
+  const formattedHtml = formatForWeChat(html, theme, font, showH1, imageBorderStyle, codeBlockStyle);
   
-  try {
-    // 方法1: 使用 Clipboard API 的 write 方法（推荐，支持富文本）
-    if (navigator.clipboard && navigator.clipboard.write && window.isSecureContext) {
+  // 方法1: 优先使用 Clipboard API（现代浏览器，支持富文本）
+  if (navigator.clipboard && navigator.clipboard.write && window.isSecureContext) {
+    try {
+      // 创建 ClipboardItem，包含 HTML 和纯文本两种格式
+      const textContent = document.createElement('div');
+      textContent.innerHTML = formattedHtml;
+      const plainText = textContent.textContent || textContent.innerText || '';
+
+      const htmlBlob = new Blob([formattedHtml], { type: 'text/html' });
+      const textBlob = new Blob([plainText], { type: 'text/plain' });
+
+      // 尝试两种方式创建 ClipboardItem（某些浏览器要求 Promise，某些要求 Blob）
+      let clipboardItem;
       try {
-        // 创建 ClipboardItem，包含 HTML 和纯文本两种格式
-        const textContent = document.createElement('div');
-        textContent.innerHTML = formattedHtml;
-        const plainText = textContent.textContent || textContent.innerText || '';
-
-        const htmlBlob = new Blob([formattedHtml], { type: 'text/html' });
-        const textBlob = new Blob([plainText], { type: 'text/plain' });
-
-        const clipboardItem = new ClipboardItem({
+        // 方式1: 使用 Promise（某些浏览器要求）
+        clipboardItem = new ClipboardItem({
+          'text/html': Promise.resolve(htmlBlob),
+          'text/plain': Promise.resolve(textBlob),
+        });
+      } catch (e) {
+        // 方式2: 直接使用 Blob（某些浏览器要求）
+        clipboardItem = new ClipboardItem({
           'text/html': htmlBlob,
           'text/plain': textBlob,
         });
-
-        await navigator.clipboard.write([clipboardItem]);
-        return { 
-          success: true, 
-          message: '✅ 已成功复制到剪贴板！\n\n请打开微信公众号编辑器，按 Ctrl+V (Windows) 或 Cmd+V (Mac) 粘贴内容。' 
-        };
-      } catch (clipboardError) {
-        console.warn('Clipboard API write 失败，尝试降级方案:', clipboardError);
-        // 继续尝试降级方案
       }
+
+      await navigator.clipboard.write([clipboardItem]);
+      return { 
+        success: true, 
+        message: '✅ 已成功复制到剪贴板！\n\n请打开微信公众号编辑器，按 Ctrl+V (Windows) 或 Cmd+V (Mac) 粘贴内容。' 
+      };
+    } catch (clipboardError) {
+      console.warn('Clipboard API write 失败，尝试降级方案:', clipboardError);
+      // 继续尝试降级方案
+    }
+  }
+
+  // 方法2: 使用 execCommand 复制（兼容性更好）
+  // 创建一个隐藏的 contenteditable div，自动选择并复制
+  const container = document.createElement('div');
+  container.innerHTML = formattedHtml;
+  container.contentEditable = 'true';
+  container.style.position = 'fixed';
+  container.style.left = '0';
+  container.style.top = '0';
+  container.style.width = '1px';
+  container.style.height = '1px';
+  container.style.opacity = '0.01'; // 极小的透明度，确保元素可见
+  container.style.pointerEvents = 'none';
+  container.style.overflow = 'hidden';
+  container.style.zIndex = '999999';
+  container.style.backgroundColor = 'transparent';
+  
+  document.body.appendChild(container);
+
+  try {
+    // 等待 DOM 更新
+    await new Promise(resolve => setTimeout(resolve, 20));
+    
+    // 聚焦容器（某些浏览器需要聚焦才能复制）
+    container.focus();
+    
+    // 等待聚焦完成
+    await new Promise(resolve => setTimeout(resolve, 20));
+
+    // 使用 selectAll 命令选择所有内容（最可靠的方法）
+    let copySuccess = false;
+    try {
+      const selectAllSuccess = document.execCommand('selectAll', false, undefined);
+      if (selectAllSuccess) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+        copySuccess = document.execCommand('copy');
+      }
+    } catch (e) {
+      // selectAll 失败，尝试手动选择
     }
 
-    // 方法2: 使用 execCommand 复制（降级方案，更可靠的方式）
-    const container = document.createElement('div');
-    container.innerHTML = formattedHtml;
-    // 设置容器样式，确保内容可被选择但不在视图中
-    container.style.position = 'fixed';
-    container.style.left = '-9999px';
-    container.style.top = '0';
-    container.style.width = '800px';
-    container.style.maxHeight = '600px';
-    container.style.overflow = 'auto';
-    container.style.backgroundColor = 'white';
-    container.style.padding = '20px';
-    container.setAttribute('contenteditable', 'true');
-    container.setAttribute('spellcheck', 'false');
-    document.body.appendChild(container);
-
-    try {
-      // 聚焦容器
-      container.focus();
-      
-      // 选择所有内容
+    // 如果 selectAll 失败，尝试手动创建选择范围
+    if (!copySuccess) {
       const range = document.createRange();
       range.selectNodeContents(container);
       const selection = window.getSelection();
       
       if (selection) {
         selection.removeAllRanges();
-        selection.addRange(range);
-        
-        // 等待一小段时间确保选择完成
-        await new Promise(resolve => setTimeout(resolve, 100));
-        
-        // 尝试复制
-        const successful = document.execCommand('copy');
+        try {
+          selection.addRange(range);
+          await new Promise(resolve => setTimeout(resolve, 100));
+          copySuccess = document.execCommand('copy');
+        } catch (e) {
+          // 如果添加范围失败，尝试选择整个容器
+          try {
+            const fullRange = document.createRange();
+            fullRange.selectNode(container);
+            selection.removeAllRanges();
+            selection.addRange(fullRange);
+            await new Promise(resolve => setTimeout(resolve, 100));
+            copySuccess = document.execCommand('copy');
+          } catch (e2) {
+            // 所有选择方法都失败
+          }
+        }
         
         // 清理选择
         selection.removeAllRanges();
-        
-        // 移除容器
-        document.body.removeChild(container);
-        
-        if (successful) {
-          return { 
-            success: true, 
-            message: '✅ 已成功复制到剪贴板！\n\n请打开微信公众号编辑器，按 Ctrl+V (Windows) 或 Cmd+V (Mac) 粘贴内容。\n\n提示：如果样式不完整，请尝试在微信公众号编辑器中点击"清除格式"后再粘贴。' 
-          };
-        } else {
-          return { 
-            success: false, 
-            message: '❌ 复制失败。\n\n请尝试以下方法：\n1. 手动选择右侧预览区域的内容\n2. 按 Ctrl+C (Windows) 或 Cmd+C (Mac) 复制\n3. 然后粘贴到微信公众号编辑器' 
-          };
-        }
       }
-      
+    }
+    
+    // 移除容器
+    if (container.parentNode) {
       document.body.removeChild(container);
+    }
+    
+    if (copySuccess) {
       return { 
-        success: false, 
-        message: '❌ 无法选择内容进行复制。\n\n请手动选择右侧预览区域的内容并复制。' 
-      };
-    } catch (err) {
-      // 确保容器被移除
-      if (container.parentNode) {
-        document.body.removeChild(container);
-      }
-      console.error('execCommand 复制失败:', err);
-      return { 
-        success: false, 
-        message: '❌ 复制失败。\n\n请手动选择右侧预览区域的内容，按 Ctrl+C (Windows) 或 Cmd+C (Mac) 复制，然后粘贴到微信公众号编辑器。' 
+        success: true, 
+        message: '✅ 已成功复制到剪贴板！\n\n请打开微信公众号编辑器，按 Ctrl+V (Windows) 或 Cmd+V (Mac) 粘贴内容。' 
       };
     }
-  } catch (error) {
-    console.error('复制过程出错:', error);
-    return { 
-      success: false, 
-      message: '❌ 复制失败。\n\n请手动选择右侧预览区域的内容并复制。' 
-    };
+  } catch (err) {
+    console.error('execCommand 复制失败:', err);
+    // 确保容器被移除
+    if (container.parentNode) {
+      document.body.removeChild(container);
+    }
   }
+
+  // 方法3: 使用 textarea 作为最后的后备方案
+  try {
+    const textarea = document.createElement('textarea');
+    textarea.value = formattedHtml;
+    textarea.style.position = 'fixed';
+    textarea.style.left = '0';
+    textarea.style.top = '0';
+    textarea.style.width = '2px';
+    textarea.style.height = '2px';
+    textarea.style.opacity = '0';
+    textarea.style.pointerEvents = 'none';
+    document.body.appendChild(textarea);
+    
+    textarea.focus();
+    textarea.select();
+    textarea.setSelectionRange(0, textarea.value.length);
+    
+    await new Promise(resolve => setTimeout(resolve, 50));
+    
+    const copySuccess = document.execCommand('copy');
+    document.body.removeChild(textarea);
+    
+    if (copySuccess) {
+      return { 
+        success: true, 
+        message: '✅ 已成功复制到剪贴板！\n\n请打开微信公众号编辑器，按 Ctrl+V (Windows) 或 Cmd+V (Mac) 粘贴内容。\n\n注意：由于浏览器限制，部分样式可能丢失。' 
+      };
+    }
+  } catch (err) {
+    console.error('textarea 复制失败:', err);
+  }
+
+  // 所有方法都失败
+  return { 
+    success: false, 
+    message: '❌ 复制失败。\n\n请手动选择右侧预览区域的内容，按 Ctrl+C (Windows) 或 Cmd+C (Mac) 复制，然后粘贴到微信公众号编辑器。' 
+  };
 }
 
 /**

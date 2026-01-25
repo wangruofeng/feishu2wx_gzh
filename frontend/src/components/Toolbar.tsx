@@ -1,4 +1,5 @@
 import React from 'react';
+import { CodeBlockStyle } from '../utils/markdownRenderer';
 import './Toolbar.css';
 
 interface Props {
@@ -10,9 +11,11 @@ interface Props {
   onToggleH1: () => void;
   imageBorderStyle: 'border' | 'shadow';
   onToggleImageBorder: () => void;
+  codeBlockStyle: CodeBlockStyle;
+  onToggleCodeBlockStyle: () => void;
 }
 
-const Toolbar: React.FC<Props> = ({ markdown, setMarkdown, onCopyToWeChat, isCopying, showH1, onToggleH1, imageBorderStyle, onToggleImageBorder }) => {
+const Toolbar: React.FC<Props> = ({ markdown, setMarkdown, onCopyToWeChat, isCopying, showH1, onToggleH1, imageBorderStyle, onToggleImageBorder, codeBlockStyle, onToggleCodeBlockStyle }) => {
   const handleClear = () => {
     if (window.confirm('确定要清空所有内容吗？')) {
       setMarkdown('');
@@ -102,6 +105,13 @@ function greet(name) {
           title={imageBorderStyle === 'border' ? '切换为阴影模式' : '切换为边框模式'}
         >
           {imageBorderStyle === 'border' ? '🖼️ 边框模式' : '🌫️ 阴影模式'}
+        </button>
+        <button
+          className="toolbar-btn"
+          onClick={onToggleCodeBlockStyle}
+          title={codeBlockStyle === 'classic' ? '切换为现代代码块样式' : '切换为经典代码块样式'}
+        >
+          {codeBlockStyle === 'classic' ? '💻 经典代码块' : '🎨 现代代码块'}
         </button>
       </div>
       <div className="toolbar-right">

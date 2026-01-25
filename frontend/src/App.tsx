@@ -5,15 +5,16 @@ import ThemeSwitcher from './components/ThemeSwitcher';
 import DevicePreviewToggle from './components/DevicePreviewToggle';
 import FontSelector from './components/FontSelector';
 import Toolbar from './components/Toolbar';
-import { renderMarkdown } from './utils/markdownRenderer';
-import { copyHtmlToWeChat } from './utils/wechatCopy';
+import { renderMarkdown, setCodeBlockStyle, CodeBlockStyle } from './utils/markdownRenderer';
+import { copyHtmlToWeChat, copySelectedToWeChat } from './utils/wechatCopy';
 import './App.css';
 import './styles/themes.css';
+import 'highlight.js/styles/atom-one-dark.css';
 
 const App: React.FC = () => {
   const [markdown, setMarkdown] = useState<string>('');
   const [html, setHtml] = useState<string>('');
-  const [theme, setTheme] = useState<string>('green');
+  const [theme, setTheme] = useState<string>('classic');
   const [device, setDevice] = useState<'desktop' | 'mobile'>('desktop');
   const [isCopying, setIsCopying] = useState<boolean>(false);
   const [showEditor, setShowEditor] = useState<boolean>(true);
@@ -22,6 +23,12 @@ const App: React.FC = () => {
   const [isSystemDark, setIsSystemDark] = useState<boolean>(false);
   const [showH1, setShowH1] = useState<boolean>(true);
   const [imageBorderStyle, setImageBorderStyle] = useState<'border' | 'shadow'>('border');
+  const [codeBlockStyle, setCodeBlockStyleState] = useState<CodeBlockStyle>('modern');
+  const [copyStatus, setCopyStatus] = useState<{ visible: boolean; message: string; isError: boolean }>({
+    visible: false,
+    message: '',
+    isError: false,
+  });
 
   // 检测系统暗黑模式
   useEffect(() => {
@@ -55,6 +62,14 @@ const App: React.FC = () => {
     setHtml(rendered);
   }, [markdown]);
 
+  // 当代码块样式改变时，重新渲染
+  useEffect(() => {
+    setCodeBlockStyle(codeBlockStyle);
+    const rendered = renderMarkdown(markdown);
+    setHtml(rendered);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [codeBlockStyle]);
+
   // 处理 ESC 键退出全屏
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -75,24 +90,64 @@ const App: React.FC = () => {
   const effectiveTheme = isSystemDark ? 'dark' : 'light';
   const displayTheme = theme === 'light' || theme === 'dark' ? effectiveTheme : theme;
 
-  // 一键复制到微信公众号
+  // 一键复制到微信公众号（智能判断：如果有选中内容则复制选中内容，否则复制全部）
   const handleCopyToWeChat = useCallback(async () => {
-    if (!html.trim()) {
-      alert('请先输入或粘贴内容');
-      return;
-    }
-
     setIsCopying(true);
     try {
-      const result = await copyHtmlToWeChat(html, displayTheme, font, showH1, imageBorderStyle);
-      alert(result.message);
+      // 检查是否有选中的内容
+      const selection = window.getSelection();
+      let hasValidSelection = false;
+      
+      if (selection && selection.rangeCount > 0) {
+        try {
+          const range = selection.getRangeAt(0);
+          const previewElement = document.querySelector('.preview-content');
+          const selectedText = selection.toString().trim();
+          
+          // 检查：1. 有选中文本 2. 选中内容在预览区域内
+          if (selectedText.length > 0 && previewElement && previewElement.contains(range.commonAncestorContainer)) {
+            hasValidSelection = true;
+          }
+        } catch (e) {
+          // 如果获取选择范围失败，说明没有有效选择
+          hasValidSelection = false;
+        }
+      }
+
+      let result;
+      if (hasValidSelection) {
+        // 复制选中的内容
+        result = await copySelectedToWeChat(displayTheme, font, showH1, imageBorderStyle, codeBlockStyle);
+      } else {
+        // 复制全部内容
+        if (!html.trim()) {
+          setCopyStatus({
+            visible: true,
+            message: '请先输入或粘贴内容',
+            isError: true,
+          });
+          setIsCopying(false);
+          return;
+        }
+        result = await copyHtmlToWeChat(html, displayTheme, font, showH1, imageBorderStyle, codeBlockStyle);
+      }
+      
+      setCopyStatus({
+        visible: true,
+        message: result.message,
+        isError: !result.success,
+      });
     } catch (error) {
       console.error('复制失败:', error);
-      alert('❌ 复制失败。\n\n请手动选择右侧预览区域的内容，按 Ctrl+C (Windows) 或 Cmd+C (Mac) 复制，然后粘贴到微信公众号编辑器。');
+      setCopyStatus({
+        visible: true,
+        message: '❌ 复制失败。\n\n请尝试：\n1. 刷新页面后重试\n2. 或手动选择预览区域内容，按 Ctrl+C (Windows) 或 Cmd+C (Mac) 复制',
+        isError: true,
+      });
     } finally {
       setIsCopying(false);
     }
-  }, [html, displayTheme, font, showH1, imageBorderStyle]);
+  }, [html, displayTheme, font, showH1, imageBorderStyle, codeBlockStyle]);
 
   return (
     <div className={`app theme-${displayTheme} ${isSystemDark ? 'system-dark' : 'system-light'}`}>
@@ -108,7 +163,7 @@ const App: React.FC = () => {
                 <DevicePreviewToggle device={device} setDevice={setDevice} />
                 {!isFullscreen && (
                   <button
-                    className="header-btn"
+                    className="header-btn header-btn-compact"
                     onClick={() => setShowEditor(!showEditor)}
                     title={showEditor ? '隐藏源码' : '显示源码'}
                   >
@@ -116,7 +171,7 @@ const App: React.FC = () => {
                   </button>
                 )}
                 <button
-                  className="header-btn header-btn-exit"
+                  className="header-btn header-btn-exit header-btn-compact"
                   onClick={() => setIsFullscreen(!isFullscreen)}
                   title={isFullscreen ? '退出全屏' : '全屏预览'}
                 >
@@ -149,8 +204,28 @@ const App: React.FC = () => {
             onToggleH1={() => setShowH1(!showH1)}
             imageBorderStyle={imageBorderStyle}
             onToggleImageBorder={() => setImageBorderStyle(imageBorderStyle === 'border' ? 'shadow' : 'border')}
+            codeBlockStyle={codeBlockStyle}
+            onToggleCodeBlockStyle={() => setCodeBlockStyleState(codeBlockStyle === 'classic' ? 'modern' : 'classic')}
           />
         </footer>
+      )}
+
+      {copyStatus.visible && (
+        <div className="copy-modal-overlay" onClick={() => setCopyStatus({ ...copyStatus, visible: false })}>
+          <div
+            className={`copy-modal ${copyStatus.isError ? 'copy-modal-error' : 'copy-modal-success'}`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="copy-modal-title">{copyStatus.isError ? '提示' : '复制成功'}</div>
+            <div className="copy-modal-message">{copyStatus.message}</div>
+            <button
+              className="copy-modal-button"
+              onClick={() => setCopyStatus({ ...copyStatus, visible: false })}
+            >
+              确定
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );
