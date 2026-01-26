@@ -64,6 +64,13 @@
   min-width: 320px;
 }
 
+/* 全屏模式下保持手机预览的合理宽度 */
+.preview-pane.fullscreen .preview-content.device-mobile {
+  max-width: 100%;
+  min-width: 0;
+  width: 100%;
+}
+
 .preview-content.device-desktop {
   max-width: 800px;
   margin: 0 auto;
@@ -425,19 +432,20 @@
 .preview-pane.fullscreen {
   width: 100% !important;
   height: 100%;
-  position: fixed;
+  position: relative; /* 相对于 main-container 定位 */
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
   z-index: 1001;
-  background-color: #f5f5f5;
+  background-color: transparent; /* 移除深色背景，让内容直接显示 */
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column; /* 确保垂直布局，消除间隙 */
 }
 
 .preview-pane.fullscreen .preview-header {
-  width: 60%;
-  max-width: 1200px;
-  margin: 0 auto;
+  display: none; /* 全屏模式下隐藏预览效果栏 */
 }
 
 .preview-pane.fullscreen .preview-content-wrapper {
@@ -445,12 +453,22 @@
   max-width: 1200px;
   margin: 0 auto;
   padding: 0;
-  height: calc(100% - 100px);
+  margin-top: 0; /* 确保没有上边距 */
+  height: 100%; /* 全屏模式下 header 已隐藏，不需要减去高度 */
+}
+
+/* 全屏手机预览模式下，内容包装器保持合理的宽度 */
+.main-container.device-mobile.fullscreen .preview-pane.fullscreen .preview-content-wrapper {
+  width: 100%;
+  max-width: 420px; /* 与 preview-pane 的宽度保持一致 */
 }
 
 .preview-pane.fullscreen .preview-content {
   max-width: 100%;
   padding: 40px;
+  margin-top: 0; /* 确保没有上边距 */
+  border-radius: 8px; /* 保持与默认模式一致的圆角 */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); /* 保持与默认模式一致的阴影 */
 }
 
 .preview-content.fullscreen-content {
@@ -480,7 +498,48 @@
     max-width: 95%;
   }
 
+  /* 移动端全屏手机预览模式下，内容包装器保持合理宽度 */
+  .main-container.device-mobile.fullscreen .preview-pane.fullscreen .preview-content-wrapper {
+    width: 100%;
+    max-width: 420px;
+  }
+
+  /* 全屏手机预览模式下，内容区域使用全宽 */
+  .preview-pane.fullscreen .preview-content-wrapper .preview-content.device-mobile {
+    max-width: 100%;
+    width: 100%;
+  }
+
+  .preview-pane.fullscreen .preview-header {
+    display: none; /* 移动端也隐藏预览效果栏 */
+  }
+
+  .preview-pane.fullscreen {
+    /* 移动端使用 position: relative，由 main-container 控制位置 */
+    height: 100%;
+    background-color: transparent; /* 移动端也移除深色背景 */
+  }
+
   .preview-pane.fullscreen .preview-content-wrapper {
-    height: calc(100% - 80px);
+    height: 100%; /* 移动端 header 已隐藏，不需要减去高度 */
+    margin-top: 0; /* 确保没有上边距 */
+  }
+
+  /* 移动端全屏手机预览模式下，内容包装器保持合理宽度 */
+  .main-container.device-mobile.fullscreen .preview-pane.fullscreen .preview-content-wrapper {
+    width: 100% !important;
+    max-width: 420px !important;
+  }
+
+  .preview-pane.fullscreen .preview-content {
+    margin-top: 0; /* 移动端也确保没有上边距 */
+    border-radius: 8px; /* 保持与默认模式一致的圆角 */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); /* 保持与默认模式一致的阴影 */
+  }
+
+  /* 移动端全屏手机预览模式下，内容使用全宽 */
+  .preview-pane.fullscreen .preview-content.device-mobile {
+    max-width: 100% !important;
+    width: 100% !important;
   }
 }

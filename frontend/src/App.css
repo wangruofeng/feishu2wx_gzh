@@ -146,12 +146,13 @@
 
 .main-container.fullscreen {
   position: fixed;
-  top: 0;
+  top: 140px; /* 从顶部栏下方开始，避免重叠 */
   left: 0;
   right: 0;
   bottom: 0;
   z-index: 1000;
-  background: transparent;
+  background: transparent; /* 移除深色背景区域 */
+  height: calc(100vh - 140px); /* 减去顶部栏高度 */
 }
 
 .main-container.fullscreen .editor-pane {
@@ -161,6 +162,7 @@
 .main-container.fullscreen .preview-pane {
   width: 100%;
   height: 100%;
+  top: 0; /* 相对于 main-container，从顶部开始 */
 }
 
 .main-container.device-mobile .preview-pane {
@@ -168,6 +170,13 @@
   margin: 0 auto;
   border-left: 2px solid #e8e8e8;
   border-right: 2px solid #e8e8e8;
+}
+
+/* 全屏模式下移除手机预览的边框，保持合理的手机宽度 */
+.main-container.fullscreen.device-mobile .preview-pane {
+  max-width: 420px; /* 保持合理的手机屏幕宽度，比375px稍大一点 */
+  border-left: none;
+  border-right: none;
 }
 
 .header-btn {
@@ -360,5 +369,10 @@
   .main-container.device-mobile .preview-pane {
     max-width: 100%;
     border: none;
+  }
+
+  .main-container.fullscreen {
+    top: 120px; /* 移动端顶部栏高度较小 */
+    height: calc(100vh - 120px);
   }
 }
